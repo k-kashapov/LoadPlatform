@@ -1,0 +1,6 @@
+*.elf
+*.o
+*.txt
+*.gb
+*.json
+.cache
