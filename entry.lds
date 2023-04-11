@@ -17,7 +17,7 @@ SECTIONS
 {
     . = 0x0;
 
-    .text : AT(ADDR(.text) + FLASH_VADDR)
+    .text :
     {
         KEEP(*(.vector_table));
         *(.text)

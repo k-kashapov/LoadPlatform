@@ -4,3 +4,6 @@
 *.gb
 *.json
 .cache
+build*
+*.bin
+*.jpg

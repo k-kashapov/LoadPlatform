@@ -5,7 +5,7 @@
 #include "uart.h"
 #include "SPI.h"
 
-#define LED_TICKS 500
+#define LED_TICKS 100
 
 static int LedChange = 0;
 
@@ -20,22 +20,24 @@ void systick_handler(void) {
 }
 
 void board_gpio_init(void) {
+    BIT_SET(*REG_RCC_AHBENR, IOPAEN);
     BIT_SET(*REG_RCC_AHBENR, IOPCEN);
 
-    GPIO_SET_MODE(*GPIOC_MODER, LED_BLUE, GPIO_MODER_OUT);
-    BIT_SET(*GPIOC_TYPER, LED_BLUE);
-    GPIO_SET_PUPDR(*GPIOC_PUPDR, LED_BLUE, GPIO_PUPD_NONE);
+    GPIO_SET_MODE(*GPIOC_MODER, LED_GREEN, GPIO_MODER_OUT);
+    BIT_CLR(*GPIOC_TYPER, LED_GREEN);
 }
 
 int main(void) {
     board_clocking_init(2, 12, AHB_NODIV, APB_DIV_NONE);
-    systick_init(1000);
+    board_gpio_init();
+    systick_init(1000U);
 
     SPI_init();
+    // BIT_SET(*GPIOC_ODR, LED_GREEN);
 
     while(1) {
         if (LedChange) {
-            BIT_INV(*GPIOC_ODR, LED_BLUE);
+            BIT_INV(*GPIOC_ODR, LED_GREEN);
             LedChange = 0;
         }
         // __asm__ volatile ("wfi");
