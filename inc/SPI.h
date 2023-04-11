@@ -57,6 +57,6 @@
 #define SPI_TXE     1U // Transmit buffer empty
 #define SPI_RXNE    0U // Receive buffer not empty
 
-
+void SPI_init(void);
 
 #endif // SPI_H

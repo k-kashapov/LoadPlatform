@@ -42,13 +42,14 @@ SOURCES = 		\
 	src/clock.S \
 	src/btn.c   \
 	src/uart.c  \
+	src/SPI.c   \
 	src/GPIO.c
 
 OBJECTS_HALFWAY_DONE = $(SOURCES:%.c=build/%.o)
 OBJECTS              = $(OBJECTS_HALFWAY_DONE:%.S=build/%.o)
 
-EXECUTABLE_FLASH = build/uart.elf
-BINARY_FLASH     = build/uart.bin
+EXECUTABLE_FLASH = build/main.elf
+BINARY_FLASH     = build/main.bin
 
 #---------------
 # Build scripts

@@ -26,11 +26,11 @@
 #define FIELD_AHB_HPRE  4U      // Prescaler field of AHB clock (RCC_CFGR)
 #define AHB_NODIV       0b0000U // (RCC_CFGR)
 
-#define PCLK_DIV_NONE 0b000U // (RCC_CFGR)
-#define PCLK_DIV_2    0b100U // (RCC_CFGR)
-#define PCLK_DIV_4    0b101U // (RCC_CFGR)
-#define PCLK_DIV_8    0b110U // (RCC_CFGR)
-#define PCLK_DIV_16   0b111U // (RCC_CFGR)
+#define APB_DIV_NONE 0b000U // (RCC_CFGR)
+#define APB_DIV_2    0b100U // (RCC_CFGR)
+#define APB_DIV_4    0b101U // (RCC_CFGR)
+#define APB_DIV_8    0b110U // (RCC_CFGR)
+#define APB_DIV_16   0b111U // (RCC_CFGR)
 
 #define IOPAEN 17U // IOPA enable (RCC_AHBENR)
 #define IOPBEN 18U // IOPB enable (RCC_AHBENR)
