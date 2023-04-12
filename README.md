@@ -13,3 +13,4 @@ This project is being developed as part of the course on microcontrollers at MIP
 
  - UART & DMA - **done** 
  - Tetris: game's 'model' is done, we need to implement new 'view' for it
+ - SPI support implemented
