@@ -43,6 +43,7 @@ SOURCES = 		\
 	src/btn.c   \
 	src/uart.c  \
 	src/SPI.c   \
+	src/screen.c\
 	src/GPIO.c
 
 OBJECTS_HALFWAY_DONE = $(SOURCES:%.c=build/%.o)

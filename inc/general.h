@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "arm.h"
+
 #define BIT_SET(REG, BIT)   do (REG) |=  (1U << (BIT)); while(0)
 #define BIT_CLR(REG, BIT)   do (REG) &= ~(1U << (BIT)); while(0)
 #define BIT_INV(REG, BIT)   do (REG) ^=  (1U << (BIT)); while(0)

@@ -13,6 +13,7 @@
 #define GPIOA_BSRR    (volatile uint32_t*)(uintptr_t)0x48000018U // GPIO port bit set register
 #define GPIOA_BRR     (volatile uint32_t*)(uintptr_t)0x48000028U // GPIO port bit reset register
 #define GPIOA_OSPEEDR (volatile uint32_t*)(uintptr_t)0x48000008U // GPIO port output speed register
+#define GPIOA_AFRL    (volatile uint32_t*)(uintptr_t)0x48000020U // GPIO alternate function low register
 #define GPIOA_AFRH    (volatile uint32_t*)(uintptr_t)0x48000024U // GPIO alternate function high register
 
 #define GPIOC_PUPDR (volatile uint32_t*)(uintptr_t)0x4800080CU // GPIO port pull-up/pull-down register
@@ -52,6 +53,10 @@
 
 #define PA9_USART_TX  1U
 #define PA10_USART_RX 1U
+
+#define PA5_SPI1_SCK  0U
+#define PA6_SPI1_MISO 0U
+#define PA7_SPI1_MOSI 0U
 
 #define GPIO_SET_OSPEEDR(REG, PIN, SPD) do (REG) |= (SPD) << (2U * (PIN)); while(0)
 

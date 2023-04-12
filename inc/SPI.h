@@ -1,16 +1,16 @@
 #ifndef SPI_H
 #define SPI_H
 
-#include <stddef.h>
+#include <stdint.h>
 
-#define SPI1_CR_BASE ((uint16_t*)0x40013000) // SPI 1 Control    registers base
-#define SPI1_CR1     ((uint16_t*)0x40013000) // SPI 1 Control    register 1
-#define SPI1_CR2     ((uint16_t*)0x40013004) // SPI 1 Control    register 2
-#define SPI1_SR      ((uint16_t*)0x40013008) // SPI 1 Status     register
-#define SPI1_DR      ((uint16_t*)0x4001300C) // SPI 1 Data       register
-#define SPI1_CRCPR   ((uint16_t*)0x40013010) // SPI 1 Polynomial register
-#define SPI1_RXCRCR  ((uint16_t*)0x40013014) // SPI 1 Rx CRC     register
-#define SPI1_TXCRCR  ((uint16_t*)0x40013018) // SPI 1 Tx CRC     register
+#define SPI1_CR_BASE ((volatile uint16_t*)(uintptr_t)0x40013000U) // SPI 1 Control    registers base
+#define SPI1_CR1     ((volatile uint16_t*)(uintptr_t)0x40013000U) // SPI 1 Control    register 1
+#define SPI1_CR2     ((volatile uint16_t*)(uintptr_t)0x40013004U) // SPI 1 Control    register 2
+#define SPI1_SR      ((volatile uint16_t*)(uintptr_t)0x40013008U) // SPI 1 Status     register
+#define SPI1_DR      ((volatile uint16_t*)(uintptr_t)0x4001300CU) // SPI 1 Data       register
+#define SPI1_CRCPR   ((volatile uint16_t*)(uintptr_t)0x40013010U) // SPI 1 Polynomial register
+#define SPI1_RXCRCR  ((volatile uint16_t*)(uintptr_t)0x40013014U) // SPI 1 Rx CRC     register
+#define SPI1_TXCRCR  ((volatile uint16_t*)(uintptr_t)0x40013018U) // SPI 1 Tx CRC     register
 
 // SPIx_CR1 bitfields
 #define SPI_BIDIMODE 15U // Bidirectional data mode enable
@@ -28,6 +28,16 @@
 #define SPI_CPOL      1U // Clock polarity
 #define SPI_CPHA      0U // Clock phase
 
+// BR possible values
+#define BAUD_DIV2   0x0
+#define BAUD_DIV4   0x1
+#define BAUD_DIV8   0x2
+#define BAUD_DIV16  0x3
+#define BAUD_DIV32  0x4
+#define BAUD_DIV64  0x5
+#define BAUD_DIV128 0x6
+#define BAUD_DIV256 0x7
+
 // SPIx_CR2 bitfields
 // Bit 15 reserved
 #define SPI_LDMA_TX 14U // Last DMA transfer for transmission
@@ -43,6 +53,21 @@
 #define SPI_TXDMAEN  1U // Tx buffer DMA enable
 #define SPI_RXDMAEN  0U // Rx buffer DMA enable
 
+// DS possible values
+#define DATA_SIZE_4  0x3
+#define DATA_SIZE_5  0x4
+#define DATA_SIZE_6  0x5
+#define DATA_SIZE_7  0x6
+#define DATA_SIZE_8  0x7
+#define DATA_SIZE_9  0x8
+#define DATA_SIZE_10 0x9
+#define DATA_SIZE_11 0xa
+#define DATA_SIZE_12 0xb
+#define DATA_SIZE_13 0xc
+#define DATA_SIZE_14 0xd
+#define DATA_SIZE_15 0xe
+#define DATA_SIZE_16 0xf
+
 // SPIx_SR bitfields
 // Bits [15; 13] are reserved
 #define SPI_FTLVL  11U // FIFO Transmission Level. These bits are set and cleared by hardware.
@@ -57,6 +82,13 @@
 #define SPI_TXE     1U // Transmit buffer empty
 #define SPI_RXNE    0U // Receive buffer not empty
 
-void SPI_init(void);
+void SPI_init(unsigned divisor);
+int SPI_send_byte(uint8_t value);
+uint16_t SPI_read(void);
+
+enum SND_ERRORS {
+    OK = 0,
+    E_NO_SND = 1,
+};
 
 #endif // SPI_H
