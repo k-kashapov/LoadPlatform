@@ -14,3 +14,12 @@ This project is being developed as part of the course on microcontrollers at MIP
  - UART & DMA - **done** 
  - Tetris: game's 'model' is done, we need to implement new 'view' for it
  - SPI support implemented
+
+## Hardware peripherals
+
+ - 4 simple buttons used for controls 
+ - UART-to-USB adapter to receive binaries from computer
+ - STM32F0DISCOVERY board
+ - Connection wires & bread board
+ - USB-to-mini USB adapter to power up the microcontroller 
+ - SSD1306 OLED display
