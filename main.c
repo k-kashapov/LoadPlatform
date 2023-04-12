@@ -9,7 +9,10 @@
 #include "inc/sleep.h"
 #include "inc/systick.h"
 
+#include "api.h"
 #include "uart.h"
+
+extern struct API API_host;
 
 //=========================================================
 
@@ -26,11 +29,29 @@
 
 //=========================================================
 
+#define SRAM_SIZE  0x00002000U
+#define SRAM_VADDR 0x20000000U
+#define SRAM_PADDR 0x20000000U
+
+#define USER_OFFS  0x00000400U
+#define USER_START SRAM_VADDR + USER_OFFS
+#define USER_STACK SRAM_VADDR + SRAM_SIZE
+
+#define USER_API_PTR_ADDR  USER_START
+#define USER_EXEC_START    USER_START + 0x2U
+#define USER_MAX_PROG_SIZE SRAM_SIZE - USER_OFFS
+
+//=========================================================
+
 static void board_clocking_init(void);
 static void board_gpio_init(void);
 static void systick_init(uint32_t period_us);
 
-static int run_tests(struct Uart* uart);
+static int uart_init(struct Uart* uart);
+static int receive_code(struct Uart* uart);
+static void run_code(void);
+
+// static int run_tests(struct Uart* uart);
 
 //=========================================================
 
@@ -169,6 +190,64 @@ void systick_handler(void)
     }
 }
 
+//-----------
+// UART init
+//-----------
+
+static int uart_init(struct Uart* uart)
+{
+    struct Uart_conf uart_conf = { .uartno = 1U,
+                                   .baudrate  = UART_BAUDRATE,
+                                   .frequency = CPU_FREQENCY,
+                                   .tx = {.port = GPIOA, .pin = 9U},
+                                   .rx = {.port = GPIOA, .pin = 10U},
+                                   .af_tx = GPIO_AF1,
+                                   .af_rx = GPIO_AF1 }; 
+
+    
+    int err = uart_setup(uart, &uart_conf);
+    if (err < 0) return err;    
+ 
+    err = uart_transmit_enable(uart);
+    if (err < 0) return err;
+    
+    err = uart_receive_enable(uart);
+    if (err < 0) return err;
+
+    return 0;
+}
+
+//-------------------------------
+// Receive and emplace user code
+//-------------------------------
+
+static int receive_code(struct Uart* uart)
+{
+    int err = uart_recv_buffer(uart, (void*) USER_START, USER_MAX_PROG_SIZE);
+    if (err < 0) return err;
+
+    while (is_recv_complete() == false)
+        continue;
+
+    return 0;
+}
+
+//---------------------------
+// Preapre and run user code
+//---------------------------
+
+static void __attribute__((noreturn)) run_code(void)
+{
+    struct API* api_guest = (struct API*) *((uint32_t*) USER_API_PTR_ADDR);
+    *api_guest = API_host;
+
+    __asm__ volatile("mov sp, %0"::"r"(USER_STACK));
+    ((void (*)(void)) USER_EXEC_START)();
+    
+    while (1)   
+        continue;
+}
+
 //------
 // Main
 //------
@@ -180,90 +259,63 @@ int main()
     systick_init(SYSTICK_PERIOD_US);
 
     struct Uart uart = {};
-
-    struct Uart_conf uart_conf = { .uartno = 1U,
-                                   .baudrate  = UART_BAUDRATE,
-                                   .frequency = CPU_FREQENCY,
-                                   .tx = {.port = GPIOA, .pin = 9U},
-                                   .rx = {.port = GPIOA, .pin = 10U},
-                                   .af_tx = GPIO_AF1,
-                                   .af_rx = GPIO_AF1 }; 
-
-    
-    int err = uart_setup(&uart, &uart_conf);
-    if (err < 0) return err;    
- 
-    err = uart_transmit_enable(&uart);
+    int err = uart_init(&uart);
     if (err < 0) return err;
     
-    err = uart_receive_enable(&uart);
+    err = receive_code(&uart);
     if (err < 0) return err;
 
-    (void) run_tests;
-    // err = run_tests(&uart);
-    // if (err < 0) return err;
-
-    err = uart_trns_string(&uart, "Hello world", true);
-    if (err < 0) return err;
-
-    char inp[128] ={ 0 };
-    err = uart_recv_string_n(&uart, (uint8_t*) inp, 2);
-    if (err < 0) return err;
-
-    err = uart_trns_string(&uart, inp,  true);
-    if (err < 0) return err;
-
-    GPIO_BSRR_SET_PIN(GPIOC, GREEN_LED_GPIOC_PIN);
+    run_code();
 }
 
 //------------
-// Uart tests
+// Uart unit-tests
 //------------
 
-static int run_tests(struct Uart* uart)
-{
-    const char str[] = "Hello, world!\r";
-    int err = uart_trns_buffer(uart, str, sizeof(str));
-    if (err < 0) return err;
+// static int run_tests(struct Uart* uart)
+// {
+//     const char str[] = "Hello, world!\r";
+//     int err = uart_trns_buffer(uart, str, sizeof(str));
+//     if (err < 0) return err;
 
-    while (is_trns_complete() == false);
+//     while (is_trns_complete() == false);
 
-    err = uart_transmit_disable(uart);
-    if (err < 0) return err;
+//     err = uart_transmit_disable(uart);
+//     if (err < 0) return err;
 
-    err = uart_transmit_enable(uart);
-    if (err < 0) return err;
+//     err = uart_transmit_enable(uart);
+//     if (err < 0) return err;
 
-    const char str2[] = "Hello, world (again)!\r";
-    err = uart_trns_buffer(uart, str2, sizeof(str2));
-    if (err < 0) return err;
+//     const char str2[] = "Hello, world (again)!\r";
+//     err = uart_trns_buffer(uart, str2, sizeof(str2));
+//     if (err < 0) return err;
 
-    char inp1 = 0;
-    err = uart_recv_buffer(uart, &inp1, sizeof(char));
-    if (err < 0) return err;
+//     char inp1 = 0;
+//     err = uart_recv_buffer(uart, &inp1, sizeof(char));
+//     if (err < 0) return err;
 
-    while (is_recv_complete() == false);
+//     while (is_recv_complete() == false);
 
-    err = uart_receive_disable(uart);
-    if (err < 0) return err;
+//     err = uart_receive_disable(uart);
+//     if (err < 0) return err;
 
-    err = uart_receive_enable(uart);
-    if (err < 0) return err;
+//     err = uart_receive_enable(uart);
+//     if (err < 0) return err;
 
-    char inp2 = 0;
-    err = uart_recv_buffer(uart, &inp2, sizeof(char));
-    if (err < 0) return err;
+//     char inp2 = 0;
+//     err = uart_recv_buffer(uart, &inp2, sizeof(char));
+//     if (err < 0) return err;
 
-    while (is_trns_complete() == false || is_recv_complete() == false)
-        continue;
+//     while (is_trns_complete() == false || is_recv_complete() == false)
+//         continue;
 
-    err = uart_trns_buffer(uart, &inp1, sizeof(char));
-    if (err < 0) return err;
+//     err = uart_trns_buffer(uart, &inp1, sizeof(char));
+//     if (err < 0) return err;
 
-    while (is_trns_complete() == false);
+//     while (is_trns_complete() == false);
 
-    err = uart_trns_buffer(uart, &inp2, sizeof(char));
-    if (err < 0) return err;
+//     err = uart_trns_buffer(uart, &inp2, sizeof(char));
+//     if (err < 0) return err;
 
-    return 0;
-}
+//     return 0;
+// }

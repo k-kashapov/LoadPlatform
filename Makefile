@@ -10,7 +10,8 @@ CFLAGS = \
 	-Wextra \
 	-Werror \
 	-march=armv6-m \
-	-mcpu=cortex-m0
+	-mcpu=cortex-m0 \
+	-Os
 
 LDFLAGS = \
 	-Wall \
@@ -36,7 +37,8 @@ endif
 SOURCES = \
 	entry.S \
 	uart.c \
-	main.c 
+	main.c \
+	api.c  \
 
 OBJECTS_HALFWAY_DONE = $(SOURCES:%.c=build/%.o)
 OBJECTS              = $(OBJECTS_HALFWAY_DONE:%.S=build/%.o)
@@ -66,6 +68,39 @@ build/%.o: %.S
 
 clean:
 	rm -rf build
+
+#----------------------
+# User prog
+#----------------------
+
+ULDFLAGS = \
+	 -Wall \
+	 -Wextra \
+	 -Werror \
+	 -Wl,--start-group -lgcc -lc -lg -Wl,--end-group -Wl,--gc-sections \
+	 -march=armv6-m \
+	 -mcpu=cortex-m0 \
+	 -Wl,--warn-common \
+	 -Wl,--fatal-warnings \
+	 -Wl,-z,max-page-size=8 \
+	 -Wl,-T,user.lds
+
+USOURCES = user.S \
+		   blinkled.c
+
+UOBJECTS_HALFWAY_DONE = $(USOURCES:%.c=build/%.o)
+UOBJECTS              = $(UOBJECTS_HALFWAY_DONE:%.S=build/%.o)
+
+UEXECUTABLE_FLASH = build/user.elf
+UBINARY_FLASH     = build/user.bin
+
+ucode: $(UEXECUTABLE_FLASH) $(UBINARY_FLASH) $(USOURCES)
+
+$(UEXECUTABLE_FLASH): $(UOBJECTS)
+	$(CC) $(ULDFLAGS) $(UOBJECTS) -o $@
+
+$(UBINARY_FLASH): $(UEXECUTABLE_FLASH)
+	arm-none-eabi-objcopy -O binary $< $@
 
 #----------------------
 # Hardware interaction
