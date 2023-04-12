@@ -5,6 +5,9 @@
 #define SCRN_SIZ_BITS  (SCRN_HEIGHT * SCRN_WIDTH)
 #define SCRN_SIZ_BYTES (SCRN_SIZ_BITS >> 3)
 
+// TODO: Organise screen functions
+// TODO: Make text printing
+
 // Init sequence is copied from https://github.com/digitallyamar/STM32_SSD1306_OLED_SPI_Baremetal
 
 // OLED Init commands
@@ -30,7 +33,7 @@
 #define OLED_SEGREMAP                       0xA0
 #define OLED_CHARGEPUMP                     0x8D
 
-static uint8_t FrameBuffer[SCRN_SIZ_BYTES] = {0};
+static uint8_t  FrameBuffer[SCRN_SIZ_BYTES] = {0};
 
 void oled_init(void) {
     // To initialize OLED, we need to send 25 OLED commands
@@ -106,6 +109,13 @@ void scrn_clear(uint8_t value) {
     }
 }
 
+void scrn_draw(void) {
+    SCRN_MODE_SET(MODE_DATA);
+    for (unsigned byte = 0; byte < SCRN_SIZ_BYTES; byte++) {
+        SPI_send_byte(FrameBuffer[byte]);
+    }
+}
+
 int scrn_set_pxiel(unsigned x, unsigned y) {
     if (x >= SCRN_WIDTH || y >= SCRN_HEIGHT) {
         return -SCRN_E_INVAL;
@@ -116,7 +126,7 @@ int scrn_set_pxiel(unsigned x, unsigned y) {
 
     FrameBuffer[idx_byte] |= (1 << idx_bit);
 
-    return 0;
+    return SCRN_OK;
 }
 
 int scrn_clr_pxiel(unsigned x, unsigned y) {
@@ -129,7 +139,7 @@ int scrn_clr_pxiel(unsigned x, unsigned y) {
 
     FrameBuffer[idx_byte] &= ~(1 << idx_bit);
 
-    return 0;
+    return SCRN_OK;
 }
 
 int scrn_inv_pxiel(unsigned x, unsigned y) {
@@ -142,25 +152,16 @@ int scrn_inv_pxiel(unsigned x, unsigned y) {
 
     FrameBuffer[idx_byte] &= ~(1 << idx_bit);
 
-    return 0;
+    return SCRN_OK;
 }
 
-int scrn_set_caret(unsigned x, unsigned y) {
-    if (x >= SCRN_WIDTH || y >= SCRN_HEIGHT) {
-        return -SCRN_E_INVAL;
+#include "ascii.h"
+int scrn_print(char ch) {
+    (void) ch;
+
+    for (unsigned idx = 0; idx < 8; idx++) {
+        SPI_send_byte(ASCII_A[idx]);
     }
 
-    uint8_t start_line_cmd = 0x40 & (y & MASK_LOWER(7));
-
-    SCRN_MODE_SET(MODE_CMD);
-    SPI_send_byte(start_line_cmd);
-
-    return 0;
-}
-
-void scrn_draw(void) {
-    SCRN_MODE_SET(MODE_DATA);
-    for (unsigned byte = 0; byte < SCRN_SIZ_BYTES; byte++) {
-        SPI_send_byte(FrameBuffer[byte]);
-    }
+    return SCRN_OK;
 }

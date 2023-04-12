@@ -82,6 +82,8 @@ int main(void) {
 
     scrn_draw();
 
+    scrn_print(0);
+
     while(1) {
         if (LedChange) {
             BIT_INV(*GPIOC_ODR, LED_BLUE);

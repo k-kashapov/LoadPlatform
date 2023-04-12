@@ -15,4 +15,9 @@
 #define FIELD_WRITE(REG, VALUE, SHIFT) ((REG) |= ((VALUE) << (SHIFT)))
 #define FIELD_READ(REG, MASK)          ((REG) & (MASK))
 
+typedef struct upair8 {
+    uint8_t x;
+    uint8_t y;
+} upair8_t;
+
 #endif // GENERAL_H

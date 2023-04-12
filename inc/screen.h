@@ -32,11 +32,11 @@ enum SCRN_ERR {
 
 void scrn_init(void);
 void scrn_clear(uint8_t value);
+void scrn_draw(void);
+
 int scrn_set_pxiel(unsigned x, unsigned y);
 int scrn_clr_pxiel(unsigned x, unsigned y);
 int scrn_inv_pxiel(unsigned x, unsigned y);
-int scrn_set_caret(unsigned x, unsigned y);
-
-void scrn_draw(void);
+int scrn_print    (char ch);
 
 #endif // SCREEEN_H
