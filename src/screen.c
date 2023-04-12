@@ -1,5 +1,7 @@
 #include "screen.h"
 
+// Init sequence is copied from https://github.com/digitallyamar/STM32_SSD1306_OLED_SPI_Baremetal
+
 // OLED Init commands
 #define OLED_SETCONTRAST                    0x81
 #define OLED_DISPLAYALLON_RESUME            0xA4
@@ -72,13 +74,13 @@ void scrn_init(void) {
 
     // Turn off for a while to reset the screen
     BIT_CLR(*GPIOC_ODR, RES_PIN);
-    for (int i = 0; i < 400; i++) {
+    for (int i = 0; i < 100; i++) {
         wfi();
     }
 
     // Turn on the power
     BIT_SET(*GPIOC_ODR, RES_PIN);
-    for (int i = 0; i < 400; i++) {
+    for (int i = 0; i < 100; i++) {
         wfi();
     }
 
