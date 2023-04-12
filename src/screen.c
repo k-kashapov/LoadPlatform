@@ -1,5 +1,10 @@
 #include "screen.h"
 
+#define SCRN_WIDTH     128
+#define SCRN_HEIGHT    64
+#define SCRN_SIZ_BITS  (SCRN_HEIGHT * SCRN_WIDTH)
+#define SCRN_SIZ_BYTES (SCRN_SIZ_BITS >> 3)
+
 // Init sequence is copied from https://github.com/digitallyamar/STM32_SSD1306_OLED_SPI_Baremetal
 
 // OLED Init commands
@@ -25,6 +30,8 @@
 #define OLED_SEGREMAP                       0xA0
 #define OLED_CHARGEPUMP                     0x8D
 
+static uint8_t FrameBuffer[SCRN_SIZ_BYTES] = {0};
+
 void oled_init(void) {
     // To initialize OLED, we need to send 25 OLED commands
     // We will store these commands in an array
@@ -48,7 +55,7 @@ void oled_init(void) {
         OLED_SETCOMPINS,
         0x12, // 128x64
         OLED_SETCONTRAST,
-        0xCF,
+        0xFF,
         OLED_SETPRECHARGE,
         0xF1,
         OLED_SETVCOMDETECT,
@@ -84,14 +91,76 @@ void scrn_init(void) {
         wfi();
     }
 
-    // Turn on the screen
-    // int res;
-    // do {
-    //     res = SPI_send_byte(CMD_TURN_ON);
-    // } while (res < 0);
-
     oled_init();
 
     // Switch to data transfer mode
     SCRN_MODE_SET(MODE_DATA);
+}
+
+// Fills the entire screen with given value
+void scrn_clear(uint8_t value) {
+    SCRN_MODE_SET(MODE_DATA);
+    for (unsigned byte = 0; byte < SCRN_SIZ_BYTES; byte++) {
+        SPI_send_byte(value);
+        FrameBuffer[byte] = value;
+    }
+}
+
+int scrn_set_pxiel(unsigned x, unsigned y) {
+    if (x >= SCRN_WIDTH || y >= SCRN_HEIGHT) {
+        return -SCRN_E_INVAL;
+    }
+
+    unsigned idx_byte = x + ((y >> 3) << 7);
+    unsigned idx_bit  = y & MASK_LOWER(3);
+
+    FrameBuffer[idx_byte] |= (1 << idx_bit);
+
+    return 0;
+}
+
+int scrn_clr_pxiel(unsigned x, unsigned y) {
+    if (x >= SCRN_WIDTH || y >= SCRN_HEIGHT) {
+        return -SCRN_E_INVAL;
+    }
+
+    unsigned idx_byte = x + ((y >> 3) << 7);
+    unsigned idx_bit  = y & MASK_LOWER(3);
+
+    FrameBuffer[idx_byte] &= ~(1 << idx_bit);
+
+    return 0;
+}
+
+int scrn_inv_pxiel(unsigned x, unsigned y) {
+    if (x >= SCRN_WIDTH || y >= SCRN_HEIGHT) {
+        return -SCRN_E_INVAL;
+    }
+
+    unsigned idx_byte = x + ((y >> 3) << 7);
+    unsigned idx_bit  = y & MASK_LOWER(3);
+
+    FrameBuffer[idx_byte] &= ~(1 << idx_bit);
+
+    return 0;
+}
+
+int scrn_set_caret(unsigned x, unsigned y) {
+    if (x >= SCRN_WIDTH || y >= SCRN_HEIGHT) {
+        return -SCRN_E_INVAL;
+    }
+
+    uint8_t start_line_cmd = 0x40 & (y & MASK_LOWER(7));
+
+    SCRN_MODE_SET(MODE_CMD);
+    SPI_send_byte(start_line_cmd);
+
+    return 0;
+}
+
+void scrn_draw(void) {
+    SCRN_MODE_SET(MODE_DATA);
+    for (unsigned byte = 0; byte < SCRN_SIZ_BYTES; byte++) {
+        SPI_send_byte(FrameBuffer[byte]);
+    }
 }

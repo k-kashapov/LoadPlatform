@@ -16,6 +16,11 @@
 // Screen cmd to turn it on
 #define CMD_TURN_ON 0xAF
 
+enum SCRN_ERR {
+    SCRN_OK = 0,
+    SCRN_E_INVAL = 3
+};
+
 #define SCRN_MODE_SET(MODE)             \
     do {                                \
         if(MODE == MODE_CMD) {          \
@@ -26,5 +31,12 @@
     } while (0)
 
 void scrn_init(void);
+void scrn_clear(uint8_t value);
+int scrn_set_pxiel(unsigned x, unsigned y);
+int scrn_clr_pxiel(unsigned x, unsigned y);
+int scrn_inv_pxiel(unsigned x, unsigned y);
+int scrn_set_caret(unsigned x, unsigned y);
+
+void scrn_draw(void);
 
 #endif // SCREEEN_H
