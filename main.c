@@ -196,8 +196,8 @@ int main()
     err = uart_transmit_enable(&uart);
     if (err < 0) return err;
     
-    err = uart_receive_enable(&uart);
-    if (err < 0) return err;
+    // err = uart_receive_enable(&uart);
+    // if (err < 0) return err;
 
     const char str[] = "Hello, world!\r";
     err = uart_trns_buffer(&uart, str, sizeof(str));
@@ -219,4 +219,7 @@ int main()
 
     //     for (unsigned iter = 0; iter < 1000000U; iter++);
     // }
+
+    // if (is_trns_complete() == true)
+    //     GPIO_BSRR_SET_PIN(GPIOC, 9U);
 }

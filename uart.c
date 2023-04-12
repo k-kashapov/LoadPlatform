@@ -368,13 +368,20 @@ void dma_ch2_3_handler(void)
     if (CHECK_BIT(DMA_ISR, DMA_ISR_TCIF2) != 0)
     {
         Trns_complete = true;
+        *(DMA_IFCR) = (1 << DMA_ISR_TCIF2);
+
+        GPIO_BSRR_SET_PIN(GPIOC, 9U);
     }
 
     if (CHECK_BIT(DMA_ISR, DMA_ISR_TCIF3) != 0)
     {
         Recv_complete = true;
+        *(DMA_IFCR) = (1 << DMA_ISR_TCIF3);
+
+        // GPIO_BSRR_SET_PIN(GPIOC, 9U);
     }
 
+    // DEBUG
     // GPIO_BSRR_SET_PIN(GPIOC, 9U);
 
     NVIC_CLEAR_PEND_IRQ(DMA_CH2_3_IRQ);
@@ -443,7 +450,7 @@ int uart_trns_buffer(struct Uart* uart, const void* buffer, size_t size)
     SET_BIT(USART_CR3(uart->UARTx), USART_CR3_DMAT); // use DMA
 
     SET_DMA_CPAR(DMA_CPAR2, (uint32_t) USART_TDR(uart->UARTx)); // Peripheral
-    SET_DMA_CMAR(DMA_CPAR2, (uint32_t) buffer); // memory address
+    SET_DMA_CMAR(DMA_CMAR2, (uint32_t) buffer); // memory address
     SET_DMA_CNDTR_NDT(DMA_CNDTR2, size); // byte count
 
     SET_DMA_CCR_PL(DMA_CCR2, DMA_CCR_PL_MED); // Medium priority
