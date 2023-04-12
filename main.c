@@ -199,19 +199,24 @@ int main()
     err = uart_receive_enable(&uart);
     if (err < 0) return err;
 
-    // const char str[] = "Hello, world!\r";
-    // err = uart_trns_buffer(&uart, str, sizeof(str));
-    // if (err < 0) return err;
+    const char str[] = "Hello, world!\r";
+    err = uart_trns_buffer(&uart, str, sizeof(str));
+    if (err < 0) return err;
 
-    // static bool led_is_on = false;
-    // if (!led_is_on)
+    // bool led_is_on = false;
+    // while (1)
     // {
-    //     GPIO_BSRR_SET_PIN(GPIOC, 9U);
-    //     led_is_on = 1;
-    // }
-    // else 
-    // {
-    //     GPIO_BRR_RESET_PIN(GPIOC, 9U);
-    //     led_is_on = 0;
+    //     if (!led_is_on)
+    //     {
+    //         GPIO_BSRR_SET_PIN(GPIOC, 9U);
+    //         led_is_on = 1;
+    //     }
+    //     else 
+    //     {
+    //         GPIO_BRR_RESET_PIN(GPIOC, 9U);
+    //         led_is_on = 0;
+    //     }
+
+    //     for (unsigned iter = 0; iter < 1000000U; iter++);
     // }
 }

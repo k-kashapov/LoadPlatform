@@ -31,6 +31,8 @@ static void uart_handler(unsigned uartno);
 
 //---------------------------------------------------------
 
+#define DMA_CH2_3_IRQ 10U
+
 static bool Trns_complete = true;
 static bool Recv_complete = true;
 
@@ -64,6 +66,9 @@ int uart_setup(struct Uart* uart, const struct Uart_conf* uart_conf)
 #ifdef UART_USE_IRQ
     NVIC_ENABLE_IRQ(uart->irq_no);
 #endif 
+
+    NVIC_ENABLE_IRQ(DMA_CH2_3_IRQ);
+    SET_BIT(REG_RCC_AHBENR, REG_RCC_AHBENR_DMAEN);
 
     return 0;
 }
@@ -137,23 +142,6 @@ int uart_transmit_enable(struct Uart* uart)
     if (uart->trns_enabled == true)
         return 0;
 
-    SET_BIT(USART_CR3(uart->UARTx), USART_CR3_DMAT); // use DMA
-
-    SET_DMA_CPAR(DMA_CPAR2, (uint32_t) USART_TDR(uart->UARTx)); // Peripheral
-    SET_DMA_CCR_PL(DMA_CCR2, DMA_CCR_PL_MED); // Medium priority
-
-    CLEAR_BIT(DMA_CCR2, DMA_CCR_DIR); // Direction - from peripheral to memory
-    SET_BIT(DMA_CCR2, DMA_CCR_MINC);  // Memory increment
-
-    SET_DMA_CCR_MSIZE(DMA_CCR2, DMA_CCR_MSIZE_8);  // Memory size = 8 bits
-    SET_DMA_CCR_PSIZE(DMA_CCR2, DMA_CCR_PSIZE_32); // Peripheral size = 32 bits
-
-    SET_BIT(DMA_CCR2, DMA_CCR_TCIE); // Transfer complete interrupt enable
-
-    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_TE);
-    while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_TEACK) == 0U)
-        continue;
-
 #ifdef UART_USE_IRQ
     SET_BIT(USART_CR1(uart->UARTx), USART_CR1_TXEIE);
     SET_BIT(USART_CR1(uart->UARTx), USART_CR1_TCIE);
@@ -182,7 +170,7 @@ int uart_receive_enable(struct Uart* uart)
     SET_DMA_CCR_PSIZE(DMA_CCR3, DMA_CCR_PSIZE_32); // Peripheral size = 32 bits
 
     SET_BIT(DMA_CCR3, DMA_CCR_MINC);  // Memory increment
-    SET_BIT(DMA_CCR3, DMA_CCR_DIR); // Direction - from memory to peripheral
+    CLEAR_BIT(DMA_CCR3, DMA_CCR_DIR); // Direction - from peripheral to memory
 
     SET_BIT(USART_CR1(uart->UARTx), USART_CR1_RE);
     while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_REACK) == 0U)
@@ -378,10 +366,18 @@ int uart_receive_disable(struct Uart* uart)
 void dma_ch2_3_handler(void)
 {
     if (CHECK_BIT(DMA_ISR, DMA_ISR_TCIF2) != 0)
+    {
         Trns_complete = true;
+    }
 
     if (CHECK_BIT(DMA_ISR, DMA_ISR_TCIF3) != 0)
+    {
         Recv_complete = true;
+    }
+
+    // GPIO_BSRR_SET_PIN(GPIOC, 9U);
+
+    NVIC_CLEAR_PEND_IRQ(DMA_CH2_3_IRQ);
 }
 
 //---------------------------------------------------------
@@ -433,7 +429,7 @@ static void uart_handler(unsigned uartno)
 
 //---------------------------------------------------------
 
-int uart_trns_buffer(struct Uart* uart, void* buffer, size_t size)
+int uart_trns_buffer(struct Uart* uart, const void* buffer, size_t size)
 {
     if (uart == NULL)
         return UART_INV_PTR;
@@ -444,12 +440,29 @@ int uart_trns_buffer(struct Uart* uart, void* buffer, size_t size)
     if (Trns_complete != true)
         return UART_TRNS_NOT_COMPL;
 
+    SET_BIT(USART_CR3(uart->UARTx), USART_CR3_DMAT); // use DMA
+
+    SET_DMA_CPAR(DMA_CPAR2, (uint32_t) USART_TDR(uart->UARTx)); // Peripheral
     SET_DMA_CMAR(DMA_CPAR2, (uint32_t) buffer); // memory address
     SET_DMA_CNDTR_NDT(DMA_CNDTR2, size); // byte count
+
+    SET_DMA_CCR_PL(DMA_CCR2, DMA_CCR_PL_MED); // Medium priority
+
+    SET_BIT(DMA_CCR2, DMA_CCR_DIR); // Direction - from memory to peripheral
+    SET_BIT(DMA_CCR2, DMA_CCR_MINC);  // Memory increment
+
+    SET_DMA_CCR_MSIZE(DMA_CCR2, DMA_CCR_MSIZE_8);  // Memory size = 8 bits
+    SET_DMA_CCR_PSIZE(DMA_CCR2, DMA_CCR_PSIZE_32); // Peripheral size = 32 bits
+
+    SET_BIT(DMA_CCR2, DMA_CCR_TCIE); // Transfer complete interrupt enable
 
     Trns_complete = false;
     *USART_ICR(uart->UARTx) = (1 << USART_ICR_TCCF);
     SET_BIT(DMA_CCR2, DMA_CCR_EN); // enable channel
+
+    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_TE);
+    while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_TEACK) == 0U)
+        continue;
 
     return 0;
 }
