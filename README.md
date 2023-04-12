@@ -1,34 +1,15 @@
-# Лабораторная работа №04: Протокол передачи данный UART
+# STgaMe32 
 
-## Задачи к лабораторной №04
-- [ ] Отрефакторить код:
-	- [ ] В любой момент времени должно быть понятно, в какой бит какого регистра осуществляется запись.
-	- [ ] Реализовать дефайны для всех бит регистров (см. документацию на микроконтроллер).
-	- [ ] Реализовать макросы для записи значений в регистры.
-	- [ ] Выделить заголовочные файлы, где это осмысленно.
-- [ ] Реализовать *UartGPT*:
-	- По UART-у через minicom отправляется строка X.
-	- Устройство принимает строку по UART и отвечает "no you X".
-	- Выглядеть это должно вот так:
-		```
-		> make me a sandwich
-		> no you make me a sandwich
-		> obey my orders!
-		> no you obey my orders!
-		> reboot
-		> no you reboot
-		> ...
-		```
-- [ ] Реализовать *умный дом* (**со звездой**, **потенциально парное задание**):
-	- [ ] Два микроконтроллера связаны по протоколу UART.
-	- [ ] Первый микроконтроллер имеет:
-		- [ ] Интерфейс ввода числа (кнопки или энкодер).
-		- [ ] Интерфейс вывода числа (семисегментный индикатор).
-			- Он отображает число, вводимое с интерфейса ввода.
-		- [ ] Кнопку "отправить"
-	- [ ] Второй микроконтроллер имеет:
-		- [ ] Интерфейс вывода числа (семисегментный индикатор).
-	- [ ] Связь между двумя МК:
-		- [ ] По нажатию кнопки отправки данные с локального интерфейса вывода первого микроконтроллера отображаются на интерфейсе второго микроконтроллера.
-		- [ ] Длина провода составляет больше 0.5 метра
-		- [ ] Передача должна корректно выдерживать серию из 10 передач
+This project is being developed as part of the course on microcontrollers at MIPT DREC 2 course 4 semester 2022-2023 in collaboration with Kamil Kashapov(github: [k-kashapov](https://github.com/k-kashapov))
+
+## Plan
+ - Implement UART driver with DMA support
+ - Develop API for guest user programs (for games basically)
+ - Add guest program start-up code
+ - Add support for OLED display over SPI and some controls (e.g. buttons)
+ - Make a test program - simple game. For example, Tetris
+
+## Current state
+
+ - UART & DMA - **done** 
+ - Tetris: game's 'model' is done, we need to implement new 'view' for it
