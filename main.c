@@ -65,7 +65,7 @@ void board_gpio_init(void) {
 int main(void) {
     board_clocking_init(2, 8, AHB_NODIV, APB_DIV_16);
     board_gpio_init();
-    systick_init(4000U);
+    systick_init(8000U);
 
     SPI_init(BAUD_DIV8);
 
@@ -82,10 +82,12 @@ int main(void) {
 
     scrn_draw();
 
-    scrn_print(0);
+    uint8_t last_ch = 'a';
 
     while(1) {
         if (LedChange) {
+            scrn_print(0, 1, last_ch++);
+            scrn_draw();
             BIT_INV(*GPIOC_ODR, LED_BLUE);
             LedChange = 0;
         }

@@ -156,11 +156,13 @@ int scrn_inv_pxiel(unsigned x, unsigned y) {
 }
 
 #include "ascii.h"
-int scrn_print(char ch) {
-    (void) ch;
+int scrn_print(unsigned x, unsigned y, int ch) {
+    if (x >= SCRN_WIDTH - 8 || y >= SCRN_HEIGHT - 8) {
+        return -SCRN_E_INVAL;
+    }
 
     for (unsigned idx = 0; idx < 8; idx++) {
-        SPI_send_byte(ASCII_A[idx]);
+        FrameBuffer[x++ + (y >> 3)] = ASCII_rot[ch][idx];
     }
 
     return SCRN_OK;

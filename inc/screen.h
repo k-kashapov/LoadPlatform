@@ -37,6 +37,6 @@ void scrn_draw(void);
 int scrn_set_pxiel(unsigned x, unsigned y);
 int scrn_clr_pxiel(unsigned x, unsigned y);
 int scrn_inv_pxiel(unsigned x, unsigned y);
-int scrn_print    (char ch);
+int scrn_print    (unsigned x, unsigned y, int ch);
 
 #endif // SCREEEN_H
