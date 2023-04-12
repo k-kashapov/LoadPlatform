@@ -142,6 +142,22 @@ int uart_transmit_enable(struct Uart* uart)
     if (uart->trns_enabled == true)
         return 0;
 
+    SET_BIT(USART_CR3(uart->UARTx), USART_CR3_DMAT); // use DMA
+
+    SET_DMA_CPAR(DMA_CPAR2, (uint32_t) USART_TDR(uart->UARTx)); // Peripheral
+    SET_DMA_CCR_PL(DMA_CCR2, DMA_CCR_PL_MED); // Medium priority
+    SET_BIT(DMA_CCR2, DMA_CCR_DIR); // Direction - from memory to peripheral
+    SET_BIT(DMA_CCR2, DMA_CCR_MINC);  // Memory increment
+
+    SET_DMA_CCR_MSIZE(DMA_CCR2, DMA_CCR_MSIZE_8);  // Memory size = 8 bits
+    SET_DMA_CCR_PSIZE(DMA_CCR2, DMA_CCR_PSIZE_32); // Peripheral size = 32 bits
+
+    SET_BIT(DMA_CCR2, DMA_CCR_TCIE); // Transfer complete interrupt enable
+
+    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_TE);
+    while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_TEACK) == 0U)
+        continue;
+
 #ifdef UART_USE_IRQ
     SET_BIT(USART_CR1(uart->UARTx), USART_CR1_TXEIE);
     SET_BIT(USART_CR1(uart->UARTx), USART_CR1_TCIE);
@@ -172,6 +188,8 @@ int uart_receive_enable(struct Uart* uart)
     SET_BIT(DMA_CCR3, DMA_CCR_MINC);  // Memory increment
     CLEAR_BIT(DMA_CCR3, DMA_CCR_DIR); // Direction - from peripheral to memory
 
+    SET_BIT(DMA_CCR3, DMA_CCR_TCIE); // Transfer complete interrupt enable
+
     SET_BIT(USART_CR1(uart->UARTx), USART_CR1_RE);
     while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_REACK) == 0U)
         continue;
@@ -198,9 +216,6 @@ int uart_transmit_disable(struct Uart* uart)
     CLEAR_BIT(USART_CR3(uart->UARTx), USART_CR3_DMAT);
     CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_TE);
 
-    while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_TEACK) == 0U)
-        continue;
-
 #ifdef UART_USE_IRQ
     CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_TXEIE);
     CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_TCIE);
@@ -223,9 +238,6 @@ int uart_receive_disable(struct Uart* uart)
     CLEAR_BIT(USART_CR3(uart->UARTx), USART_CR3_DMAR);
     CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_RE);
 
-    while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_REACK) == 0U)
-        continue;
-
 #ifdef UART_USE_IRQ
     CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_RXNEIE);
     CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_IDLEIE);
@@ -237,152 +249,23 @@ int uart_receive_disable(struct Uart* uart)
 
 //---------------------------------------------------------
 
-// int uart_trns_byte(struct Uart* uart, uint8_t data, bool wait_tc)
-// {
-//     if (uart == NULL)
-//         return UART_INV_PTR;
-
-//     if (uart->trns_enabled == false)
-//         return UART_TRNS_DIS;
-
-//     while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_TXE) == 0U)
-//         continue;
-
-//     *USART_TDR(uart->UARTx) = data;
-
-//     if (wait_tc)
-//     {
-//         while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_TC) == 0U)
-//            continue;
-//     }
-
-//     return 0;
-// }
-
-// //---------------------------------------------------------
-
-// int uart_recv_byte(struct Uart* uart, uint8_t* data, bool wait_rxne)
-// {
-//     if (uart == NULL)
-//         return UART_INV_PTR;
-
-//     if (uart->recv_enabled == false)
-//         return UART_RECV_DIS;
-
-//     if (data == NULL)   
-//         return UART_INV_ARG;
-
-//     bool rxne = false;
-
-//     if (wait_rxne)
-//     {
-//         while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_RXNE) == 0U)
-//             continue;
-    
-//         rxne = true;
-//     }
-//     else 
-//     {
-//         if (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_RXNE) != 0U)
-//             rxne = true;
-//     }
-
-//     if (rxne == true)
-//     {
-//         *data = (uint8_t) (*USART_RDR(uart->UARTx));
-//         return 0;
-//     }
-
-//     return UART_NO_RECV;
-// }
-
-// //---------------------------------------------------------
-
-// int uart_recv_string(struct Uart* uart, uint8_t* data)
-// {
-//     uint8_t value = 0;
-
-//     do
-//     {
-//         int err = uart_recv_byte(uart, &value, true);
-//         if (err < 0) return err;
-
-//         *data = value;
-//         data++;
-
-//     } while (value != '\n');
-
-//     return 0;
-// }
-
-// //---------------------------------------------------------
-
-// int uart_recv_string_n(struct Uart* uart, uint8_t* data, unsigned n)
-// {
-//     unsigned ct = 0;
-
-//     while (ct < n)
-//     {
-//         uint8_t value = 0;
-        
-//         int err = uart_recv_byte(uart, &value, true);
-//         if (err < 0) return err;
-
-//         data[ct] = value;
-        
-//         if (value == '\r')
-//         {
-//             data[ct] = '\0';
-//             break;
-//         }
-
-//         ct++;
-//     }
-
-//     return 0;
-// }
-
-// //---------------------------------------------------------
-
-// int uart_trns_string(struct Uart* uart, const char* string, bool wait_tc)
-// {
-//     for (size_t iter = 0; string[iter] != '\0'; iter++)
-//     {
-//         int res = uart_trns_byte(uart, (uint8_t) string[iter], false);
-//         if (res < 0) return res;
-//     }
-
-//     if (wait_tc)
-//     {
-//         while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_TC) == 0U)
-//            continue;
-//     }
-
-//     return 0;
-// }
-
-//---------------------------------------------------------
-
 void dma_ch2_3_handler(void)
 {
     if (CHECK_BIT(DMA_ISR, DMA_ISR_TCIF2) != 0)
     {
         Trns_complete = true;
+        
         *(DMA_IFCR) = (1 << DMA_ISR_TCIF2);
-
-        GPIO_BSRR_SET_PIN(GPIOC, 9U);
+        CLEAR_BIT(DMA_CCR2, DMA_CCR_EN);
     }
 
     if (CHECK_BIT(DMA_ISR, DMA_ISR_TCIF3) != 0)
     {
         Recv_complete = true;
+
         *(DMA_IFCR) = (1 << DMA_ISR_TCIF3);
-
-        // GPIO_BSRR_SET_PIN(GPIOC, 9U);
+        CLEAR_BIT(DMA_CCR3, DMA_CCR_EN);
     }
-
-    // DEBUG
-    // GPIO_BSRR_SET_PIN(GPIOC, 9U);
 
     NVIC_CLEAR_PEND_IRQ(DMA_CH2_3_IRQ);
 }
@@ -447,29 +330,12 @@ int uart_trns_buffer(struct Uart* uart, const void* buffer, size_t size)
     if (Trns_complete != true)
         return UART_TRNS_NOT_COMPL;
 
-    SET_BIT(USART_CR3(uart->UARTx), USART_CR3_DMAT); // use DMA
-
-    SET_DMA_CPAR(DMA_CPAR2, (uint32_t) USART_TDR(uart->UARTx)); // Peripheral
     SET_DMA_CMAR(DMA_CMAR2, (uint32_t) buffer); // memory address
     SET_DMA_CNDTR_NDT(DMA_CNDTR2, size); // byte count
-
-    SET_DMA_CCR_PL(DMA_CCR2, DMA_CCR_PL_MED); // Medium priority
-
-    SET_BIT(DMA_CCR2, DMA_CCR_DIR); // Direction - from memory to peripheral
-    SET_BIT(DMA_CCR2, DMA_CCR_MINC);  // Memory increment
-
-    SET_DMA_CCR_MSIZE(DMA_CCR2, DMA_CCR_MSIZE_8);  // Memory size = 8 bits
-    SET_DMA_CCR_PSIZE(DMA_CCR2, DMA_CCR_PSIZE_32); // Peripheral size = 32 bits
-
-    SET_BIT(DMA_CCR2, DMA_CCR_TCIE); // Transfer complete interrupt enable
 
     Trns_complete = false;
     *USART_ICR(uart->UARTx) = (1 << USART_ICR_TCCF);
     SET_BIT(DMA_CCR2, DMA_CCR_EN); // enable channel
-
-    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_TE);
-    while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_TEACK) == 0U)
-        continue;
 
     return 0;
 }
@@ -487,7 +353,7 @@ int uart_recv_buffer(struct Uart* uart, void* buffer, size_t size)
     if (Recv_complete != true)
         return UART_TRNS_NOT_COMPL;
 
-    SET_DMA_CMAR(DMA_CPAR3, (uint32_t) buffer); // memory address
+    SET_DMA_CMAR(DMA_CMAR3, (uint32_t) buffer); // memory address
     SET_DMA_CNDTR_NDT(DMA_CNDTR3, size); // byte count
 
     Recv_complete = false;
@@ -495,6 +361,8 @@ int uart_recv_buffer(struct Uart* uart, void* buffer, size_t size)
 
     return 0;
 }
+
+//---------------------------------------------------------
 
 bool is_trns_complete(void)
 {
@@ -514,4 +382,108 @@ void uart_wait_for_tc(struct Uart* uart)
 {
     while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_TC) == 0U)
         continue;
+}
+
+//---------------------------------------------------------
+
+int uart_trns_byte(struct Uart* uart, uint8_t data, bool wait_tc)
+{
+    int err = uart_trns_buffer(uart, &data, sizeof(char));
+    if (err < 0) return err;
+
+    if (wait_tc)
+    {
+        while (is_trns_complete() == false)
+            continue;
+    }
+
+    return 0;
+}
+
+//---------------------------------------------------------
+
+int uart_trns_string(struct Uart* uart, const char* string, bool wait_tc)
+{
+    size_t len = 0;
+    while (string[len] != '\0')
+        len += 1;
+
+    int err = uart_trns_buffer(uart, (void*) string, len);
+    if (err < 0) return err;
+
+    if (wait_tc)
+    {
+        while (is_trns_complete() == false)
+            continue;
+    }
+
+    return 0;
+}
+
+//---------------------------------------------------------
+
+int uart_recv_byte(struct Uart* uart, uint8_t* data, bool wait_rxne)
+{
+    bool rxne = false;
+
+    if (wait_rxne)
+    {
+        while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_RXNE) == 0U)
+            continue;
+    
+        rxne = true;
+    }
+    else 
+    {
+        if (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_RXNE) != 0U)
+            rxne = true;
+    }
+
+    if (rxne == true)
+    {
+        int err = uart_recv_buffer(uart, (void*) data, sizeof(char));
+        if (err < 0) return err;
+
+        while (is_recv_complete() == false)
+            continue;
+
+        return 0;
+    }
+
+    return UART_NO_RECV;
+}
+
+//---------------------------------------------------------
+
+int uart_recv_string(struct Uart* uart, uint8_t* data)
+{
+    do 
+    {
+        int err = uart_recv_byte(uart, data, true);
+        if (err < 0) return err;
+
+    } while (*data++ != '\r');
+
+    return 0;
+}
+
+//---------------------------------------------------------
+
+int uart_recv_string_n(struct Uart* uart, uint8_t* data, unsigned n)
+{
+    unsigned  ct = 0;
+
+    while (ct < n) 
+    {
+        int err = uart_recv_byte(uart, &data[ct], true);
+        if (err < 0) return err;
+
+        if (data[ct] == '\r')
+            break;
+    
+        ct += 1;
+    }
+
+    data[ct] = '\0';
+    return 0;
 }

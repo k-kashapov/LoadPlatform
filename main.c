@@ -30,6 +30,8 @@ static void board_clocking_init(void);
 static void board_gpio_init(void);
 static void systick_init(uint32_t period_us);
 
+static int run_tests(struct Uart* uart);
+
 //=========================================================
 
 static void board_clocking_init()
@@ -171,8 +173,6 @@ void systick_handler(void)
 // Main
 //------
 
-#define BUFFER_SIZE 128U
-
 int main()
 {
     board_clocking_init();
@@ -196,30 +196,74 @@ int main()
     err = uart_transmit_enable(&uart);
     if (err < 0) return err;
     
-    // err = uart_receive_enable(&uart);
-    // if (err < 0) return err;
-
-    const char str[] = "Hello, world!\r";
-    err = uart_trns_buffer(&uart, str, sizeof(str));
+    err = uart_receive_enable(&uart);
     if (err < 0) return err;
 
-    // bool led_is_on = false;
-    // while (1)
-    // {
-    //     if (!led_is_on)
-    //     {
-    //         GPIO_BSRR_SET_PIN(GPIOC, 9U);
-    //         led_is_on = 1;
-    //     }
-    //     else 
-    //     {
-    //         GPIO_BRR_RESET_PIN(GPIOC, 9U);
-    //         led_is_on = 0;
-    //     }
+    (void) run_tests;
+    // err = run_tests(&uart);
+    // if (err < 0) return err;
 
-    //     for (unsigned iter = 0; iter < 1000000U; iter++);
-    // }
+    err = uart_trns_string(&uart, "Hello world", true);
+    if (err < 0) return err;
 
-    // if (is_trns_complete() == true)
-    //     GPIO_BSRR_SET_PIN(GPIOC, 9U);
+    char inp[128] ={ 0 };
+    err = uart_recv_string_n(&uart, (uint8_t*) inp, 2);
+    if (err < 0) return err;
+
+    err = uart_trns_string(&uart, inp,  true);
+    if (err < 0) return err;
+
+    GPIO_BSRR_SET_PIN(GPIOC, GREEN_LED_GPIOC_PIN);
+}
+
+//------------
+// Uart tests
+//------------
+
+static int run_tests(struct Uart* uart)
+{
+    const char str[] = "Hello, world!\r";
+    int err = uart_trns_buffer(uart, str, sizeof(str));
+    if (err < 0) return err;
+
+    while (is_trns_complete() == false);
+
+    err = uart_transmit_disable(uart);
+    if (err < 0) return err;
+
+    err = uart_transmit_enable(uart);
+    if (err < 0) return err;
+
+    const char str2[] = "Hello, world (again)!\r";
+    err = uart_trns_buffer(uart, str2, sizeof(str2));
+    if (err < 0) return err;
+
+    char inp1 = 0;
+    err = uart_recv_buffer(uart, &inp1, sizeof(char));
+    if (err < 0) return err;
+
+    while (is_recv_complete() == false);
+
+    err = uart_receive_disable(uart);
+    if (err < 0) return err;
+
+    err = uart_receive_enable(uart);
+    if (err < 0) return err;
+
+    char inp2 = 0;
+    err = uart_recv_buffer(uart, &inp2, sizeof(char));
+    if (err < 0) return err;
+
+    while (is_trns_complete() == false || is_recv_complete() == false)
+        continue;
+
+    err = uart_trns_buffer(uart, &inp1, sizeof(char));
+    if (err < 0) return err;
+
+    while (is_trns_complete() == false);
+
+    err = uart_trns_buffer(uart, &inp2, sizeof(char));
+    if (err < 0) return err;
+
+    return 0;
 }

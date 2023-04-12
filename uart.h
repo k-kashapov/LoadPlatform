@@ -61,12 +61,12 @@ int uart_receive_enable(struct Uart* uart);
 int uart_transmit_disable(struct Uart* uart);
 int uart_receive_disable(struct Uart* uart);
 
-// int uart_trns_byte(struct Uart* uart, uint8_t data, bool wait_tc);
-// int uart_trns_string(struct Uart* uart, const char* string, bool wat_tc);
+int uart_trns_byte(struct Uart* uart, uint8_t data, bool wait_tc);
+int uart_trns_string(struct Uart* uart, const char* string, bool wait_tc);
 
-// int uart_recv_byte(struct Uart* uart, uint8_t* data, bool wait_rxne);
-// int uart_recv_string(struct Uart* uart, uint8_t* data);
-// int uart_recv_string_n(struct Uart* uart, uint8_t* data, unsigned n);
+int uart_recv_byte(struct Uart* uart, uint8_t* data, bool wait_rxne);
+int uart_recv_string(struct Uart* uart, uint8_t* data);
+int uart_recv_string_n(struct Uart* uart, uint8_t* data, unsigned n);
 
 int uart_trns_buffer(struct Uart* uart, const void* buffer, size_t size);
 int uart_recv_buffer(struct Uart* uart, void* buffer, size_t size);
