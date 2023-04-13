@@ -33,14 +33,18 @@
 #define OLED_SEGREMAP                       0xA0
 #define OLED_CHARGEPUMP                     0x8D
 
-static uint8_t  FrameBuffer[SCRN_SIZ_BYTES] = {0};
+static uint8_t FrameBuffer[SCRN_SIZ_BYTES] = {0};
 
-void oled_init(void) {
+static struct ScrSettings {
+    unsigned rotated : 1;
+} Settings = {0};
+
+void oled_init() {
     // To initialize OLED, we need to send 25 OLED commands
     // We will store these commands in an array
     // We then write them to the SPI one by one
 
-    static const char oled_initcmds[25] = {
+    const char oled_initcmds[25] = {
         OLED_DISPLAYOFF,
         OLED_SETDISPLAYCLOCKDIV,
         0x80,
@@ -54,7 +58,7 @@ void oled_init(void) {
         OLED_MEMORYMODE,
         0x00,
         OLED_SEGREMAP | 0x01,
-        OLED_COMSCANDEC,
+        Settings.rotated ? OLED_COMSCANINC : OLED_COMSCANDEC,
         OLED_SETCOMPINS,
         0x12, // 128x64
         OLED_SETCONTRAST,
@@ -65,7 +69,7 @@ void oled_init(void) {
         0x40,
         OLED_DISPLAYALLON_RESUME,
         OLED_NORMALDISPLAY,
-        0xAF
+        OLED_DISPLAYON
     };
 
     for (unsigned i = 0; i < sizeof(oled_initcmds); i++) {
@@ -74,7 +78,7 @@ void oled_init(void) {
     }
 }
 
-void scrn_init(void) {
+void scrn_init(uint8_t rotated) {
     // We are going to send a command
     SCRN_MODE_SET(MODE_CMD);
 
@@ -93,6 +97,8 @@ void scrn_init(void) {
     for (int i = 0; i < 100; i++) {
         wfi();
     }
+
+    Settings.rotated = !!rotated;
 
     oled_init();
 
@@ -155,14 +161,71 @@ int scrn_inv_pxiel(unsigned x, unsigned y) {
     return SCRN_OK;
 }
 
-#include "ascii.h"
-int scrn_print(unsigned x, unsigned y, int ch) {
-    if (x >= SCRN_WIDTH - 8 || y >= SCRN_HEIGHT - 8) {
+int scrn_xline(unsigned x, unsigned y, unsigned len) {
+    if (x + len >= SCRN_WIDTH || y >= SCRN_HEIGHT) {
         return -SCRN_E_INVAL;
     }
 
+    unsigned idx_byte = x + ((y >> 3) << 7);
+    unsigned idx_bit  = y & MASK_LOWER(3);
+
+    for (unsigned i = 0; i < len; i++) {
+        FrameBuffer[idx_byte + i] |= (unsigned char)(1 << idx_bit);
+    }
+
+    return SCRN_OK;
+}
+
+int scrn_yline(unsigned x, unsigned y, unsigned len) {
+    if (x >= SCRN_WIDTH || y + len >= SCRN_HEIGHT) {
+        return -SCRN_E_INVAL;
+    }
+
+    unsigned idx_byte = x + ((y >> 3) << 7);
+    unsigned idx_bit  = y & MASK_LOWER(3);
+
+    FrameBuffer[idx_byte] |= (unsigned char)(MASK_LOWER(len) << idx_bit);
+    
+    if (len > (8 - idx_bit)) {
+        len -= (8 - idx_bit);
+        idx_byte += SCRN_WIDTH;
+
+        while (len > 8) {
+            FrameBuffer[idx_byte] |= (unsigned char)(MASK_LOWER(8));
+            idx_byte += SCRN_WIDTH;
+            len -= 8;
+        }
+
+        FrameBuffer[idx_byte] |= (unsigned char)(MASK_LOWER(len));
+    }
+    
+    return SCRN_OK;
+}
+
+int scrn_box(unsigned x, unsigned y, unsigned x_len, unsigned y_len) {
+    if (x + x_len >= SCRN_WIDTH || y + y_len >= SCRN_HEIGHT) {
+        return -SCRN_E_INVAL;
+    }
+
+    scrn_yline(        x,         y, y_len);
+    scrn_yline(x + x_len,         y, y_len);
+    
+    scrn_xline(        x,         y, x_len);
+    scrn_xline(        x, y + y_len, x_len);
+
+    return SCRN_OK;
+}
+
+#include "ascii.h"
+int scrn_print(unsigned x, unsigned y, int ch) {
+    if (x >= SCRN_WIDTH - 7 || y >= SCRN_HEIGHT - 7) {
+        return -SCRN_E_INVAL;
+    }
+
+    const uint8_t (*buf)[8] = Settings.rotated ? ASCII_rot : ASCII;
+
     for (unsigned idx = 0; idx < 8; idx++) {
-        FrameBuffer[x++ + (y >> 3)] = ASCII_rot[ch][idx];
+        FrameBuffer[x++ + ((y >> 3) << 7)] = buf[ch][idx];
     }
 
     return SCRN_OK;

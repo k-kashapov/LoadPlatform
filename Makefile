@@ -11,7 +11,8 @@ CFLAGS = 			\
 	-Werror 		\
 	-I inc  		\
 	-march=armv6-m  \
-	-mcpu=cortex-m0
+	-mcpu=cortex-m0 \
+	-Os
 
 LDFLAGS = 															  \
 	-Wall 															  \
@@ -87,7 +88,7 @@ GDB_FLAGS = 										\
 	--eval-command="target remote localhost:1234" 	\
 	--eval-command="file $(EXECUTABLE_FLASH)"
 
-flash: FORCE $(BINARY_FLASH)
+flash: FORCE $(BINARY_FLASH) inc/*
 	st-flash write $(BINARY_FLASH) 0x08000000
 
 hardware: FORCE $(EXECUTABLE_FLASH)

@@ -30,7 +30,7 @@ enum SCRN_ERR {
         }                               \
     } while (0)
 
-void scrn_init(void);
+void scrn_init(uint8_t rotated);
 void scrn_clear(uint8_t value);
 void scrn_draw(void);
 
@@ -38,5 +38,10 @@ int scrn_set_pxiel(unsigned x, unsigned y);
 int scrn_clr_pxiel(unsigned x, unsigned y);
 int scrn_inv_pxiel(unsigned x, unsigned y);
 int scrn_print    (unsigned x, unsigned y, int ch);
+
+int scrn_xline(unsigned x, unsigned y, unsigned len);
+int scrn_yline(unsigned x, unsigned y, unsigned len);
+
+int scrn_box(unsigned x, unsigned y, unsigned x_len, unsigned y_len);
 
 #endif // SCREEEN_H

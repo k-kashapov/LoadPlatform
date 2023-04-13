@@ -13,7 +13,7 @@
 #define MISO_PIN 6
 #define MOSI_PIN 7
 
-static int LedChange = 0;
+static volatile int LedChange = 0;
 
 void systick_handler(void) {
     static unsigned ticks = 0;
@@ -69,24 +69,41 @@ int main(void) {
 
     SPI_init(BAUD_DIV8);
 
-    scrn_init();
+    scrn_init(1);
 
     scrn_clear(0x00);
 
     scrn_set_pxiel(0, 0);
     scrn_set_pxiel(1, 0);
     scrn_set_pxiel(1, 1);
-    scrn_set_pxiel(1, 9);
     scrn_set_pxiel(1, 20);
     scrn_set_pxiel(127, 63);
 
+    scrn_set_pxiel(10, 10);
+    unsigned len = 64;
+    unsigned x   = 10;
+
+    while (len > 0) {
+        scrn_yline(x++, 0, len--);
+    }
+
+    scrn_xline(  0,  0, 127);
+    scrn_xline(  0, 63, 127);
+    scrn_yline(  0,  0,  63);
+    scrn_yline(127,  0,  63);
+
+    scrn_box(1, 1, 125, 61);
+
     scrn_draw();
 
-    uint8_t last_ch = 'a';
+    uint8_t last_ch = 0;
+
+    x = 0;
 
     while(1) {
         if (LedChange) {
-            scrn_print(0, 1, last_ch++);
+            scrn_print(x, 30, last_ch++);
+            x = ((x + 8) % 128);
             scrn_draw();
             BIT_INV(*GPIOC_ODR, LED_BLUE);
             LedChange = 0;

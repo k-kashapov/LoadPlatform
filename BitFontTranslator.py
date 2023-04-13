@@ -15,11 +15,11 @@ for byte in data:
         
         for ch in range(len(line) - 1):
             val = line[ch]
-            # val = int('{:08b}'.format(val)[::-1], 2)
+            val = int('{:08b}'.format(val)[::-1], 2)
             print(hex(val) + ", ", end="")
         
         val = line[-1]
-        # val = int('{:08b}'.format(val)[::-1], 2)
+        val = int('{:08b}'.format(val)[::-1], 2)
         print(hex(val) + "},")
         
         line = []
