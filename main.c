@@ -51,7 +51,7 @@ static int uart_init(struct Uart* uart);
 static int receive_code(struct Uart* uart);
 static void run_code(void);
 
-// static int run_tests(struct Uart* uart);
+static int run_tests(struct Uart* uart);
 
 //=========================================================
 
@@ -208,8 +208,8 @@ static int uart_init(struct Uart* uart)
     int err = uart_setup(uart, &uart_conf);
     if (err < 0) return err;    
  
-    err = uart_transmit_enable(uart);
-    if (err < 0) return err;
+    // err = uart_transmit_enable(uart);
+    // if (err < 0) return err;
     
     err = uart_receive_enable(uart);
     if (err < 0) return err;
@@ -224,10 +224,17 @@ static int uart_init(struct Uart* uart)
 static int receive_code(struct Uart* uart)
 {
     int err = uart_recv_buffer(uart, (void*) USER_START, USER_MAX_PROG_SIZE);
+    // int err = uart_recv_buffer(uart, (void*) USER_START, 4);
     if (err < 0) return err;
 
     while (is_recv_complete() == false)
         continue;
+
+    // err = uart_trns_buffer(uart, (void*)USER_START, 4);
+    // if (err < 0) return err;
+
+    // while (is_trns_complete() == false)
+    //     continue;
 
     return 0;
 }
@@ -261,61 +268,67 @@ int main()
     struct Uart uart = {};
     int err = uart_init(&uart);
     if (err < 0) return err;
-    
+
+    err = run_tests(&uart);
+    if (err < 0) return err;
+
     err = receive_code(&uart);
     if (err < 0) return err;
 
-    run_code();
+    // run_code();
+    (void) run_code();
 }
 
 //------------
 // Uart unit-tests
 //------------
 
-// static int run_tests(struct Uart* uart)
-// {
-//     const char str[] = "Hello, world!\r";
-//     int err = uart_trns_buffer(uart, str, sizeof(str));
-//     if (err < 0) return err;
+static int run_tests(struct Uart* uart)
+{
+    (void) uart;
 
-//     while (is_trns_complete() == false);
+    // const char str[] = "Hello, world!\r";
+    // int err = uart_trns_buffer(uart, str, sizeof(str));
+    // if (err < 0) return err;
 
-//     err = uart_transmit_disable(uart);
-//     if (err < 0) return err;
+    // while (is_trns_complete() == false);
 
-//     err = uart_transmit_enable(uart);
-//     if (err < 0) return err;
+    // err = uart_transmit_disable(uart);
+    // if (err < 0) return err;
 
-//     const char str2[] = "Hello, world (again)!\r";
-//     err = uart_trns_buffer(uart, str2, sizeof(str2));
-//     if (err < 0) return err;
+    // err = uart_transmit_enable(uart);
+    // if (err < 0) return err;
 
-//     char inp1 = 0;
-//     err = uart_recv_buffer(uart, &inp1, sizeof(char));
-//     if (err < 0) return err;
+    // const char str2[] = "Hello, world (again)!\r";
+    // err = uart_trns_buffer(uart, str2, sizeof(str2));
+    // if (err < 0) return err;
 
-//     while (is_recv_complete() == false);
+    // char inp1 = 0;
+    // err = uart_recv_buffer(uart, &inp1, sizeof(char));
+    // if (err < 0) return err;
 
-//     err = uart_receive_disable(uart);
-//     if (err < 0) return err;
+    // while (is_recv_complete() == false);
 
-//     err = uart_receive_enable(uart);
-//     if (err < 0) return err;
+    // err = uart_receive_disable(uart);
+    // if (err < 0) return err;
 
-//     char inp2 = 0;
-//     err = uart_recv_buffer(uart, &inp2, sizeof(char));
-//     if (err < 0) return err;
+    // err = uart_receive_enable(uart);
+    // if (err < 0) return err;
 
-//     while (is_trns_complete() == false || is_recv_complete() == false)
-//         continue;
+    // char inp2 = 0;
+    // err = uart_recv_buffer(uart, &inp2, sizeof(char));
+    // if (err < 0) return err;
 
-//     err = uart_trns_buffer(uart, &inp1, sizeof(char));
-//     if (err < 0) return err;
+    // while (is_trns_complete() == false || is_recv_complete() == false)
+    //     continue;
 
-//     while (is_trns_complete() == false);
+    // err = uart_trns_buffer(uart, &inp1, sizeof(char));
+    // if (err < 0) return err;
 
-//     err = uart_trns_buffer(uart, &inp2, sizeof(char));
-//     if (err < 0) return err;
+    // while (is_trns_complete() == false);
 
-//     return 0;
-// }
+    // err = uart_trns_buffer(uart, &inp2, sizeof(char));
+    // if (err < 0) return err;
+
+    return 0;
+}

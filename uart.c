@@ -12,10 +12,6 @@
 
 //=========================================================
 
-// #define UART_USE_IRQ
-
-//=========================================================
-
 static const uint32_t UARTx[8] = { USART1, USART2, USART3, USART4,
                                         USART5, USART6, USART7, USART8 };
 
@@ -63,11 +59,9 @@ int uart_setup(struct Uart* uart, const struct Uart_conf* uart_conf)
     uart_gpio_setup(uart, uart_conf);
     uart_usart_setup(uart, uart_conf);
 
-#ifdef UART_USE_IRQ
     NVIC_ENABLE_IRQ(uart->irq_no);
-#endif 
-
     NVIC_ENABLE_IRQ(DMA_CH2_3_IRQ);
+
     SET_BIT(REG_RCC_AHBENR, REG_RCC_AHBENR_DMAEN);
 
     return 0;
@@ -134,7 +128,7 @@ static void uart_usart_setup(struct Uart* uart, const struct Uart_conf* uart_con
 
 //---------------------------------------------------------
 
-int uart_transmit_enable(struct Uart* uart)
+int uart_transmit_enable(struct Uart* uart) // TODO parity, checksum 
 {
     if (uart == NULL)
         return UART_INV_PTR;
@@ -157,11 +151,6 @@ int uart_transmit_enable(struct Uart* uart)
     SET_BIT(USART_CR1(uart->UARTx), USART_CR1_TE);
     while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_TEACK) == 0U)
         continue;
-
-#ifdef UART_USE_IRQ
-    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_TXEIE);
-    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_TCIE);
-#endif 
 
     uart->trns_enabled = true;
     return 0;
@@ -190,14 +179,13 @@ int uart_receive_enable(struct Uart* uart)
 
     SET_BIT(DMA_CCR3, DMA_CCR_TCIE); // Transfer complete interrupt enable
 
+    //
+    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_IDLEIE);
+    // 
+
     SET_BIT(USART_CR1(uart->UARTx), USART_CR1_RE);
     while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_REACK) == 0U)
         continue;
-
-#ifdef UART_USE_IRQ
-    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_RXNEIE);
-    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_IDLEIE);
-#endif 
 
     uart->recv_enabled = true;
     return 0;
@@ -216,11 +204,6 @@ int uart_transmit_disable(struct Uart* uart)
     CLEAR_BIT(USART_CR3(uart->UARTx), USART_CR3_DMAT);
     CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_TE);
 
-#ifdef UART_USE_IRQ
-    CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_TXEIE);
-    CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_TCIE);
-#endif 
-
     uart->trns_enabled = false;
     return 0;
 }
@@ -238,10 +221,9 @@ int uart_receive_disable(struct Uart* uart)
     CLEAR_BIT(USART_CR3(uart->UARTx), USART_CR3_DMAR);
     CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_RE);
 
-#ifdef UART_USE_IRQ
-    CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_RXNEIE);
+    //
     CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_IDLEIE);
-#endif 
+    // 
 
     uart->recv_enabled = false;
     return 0;
@@ -288,33 +270,20 @@ void uart2_handler(void)
 
 static void uart_handler(unsigned uartno)
 {
-#ifdef UART_USE_IRQ
-
     uint32_t uart = UARTx[uartno - 1];
 
-    uint8_t data = 0;
-
-    if (CHECK_BIT(USART_ISR(uart), USART_ISR_RXNE) != 0U)
-        data = *USART_RDR(uart);
-
-    if (CHECK_BIT(USART_ISR(uart), USART_ISR_TXE) != 0U)
-        *USART_TDR(uart) = 'a';
-
-    if (CHECK_BIT(USART_ISR(uart), USART_ISR_TC) != 0U)
-        *USART_ICR(uart) = (1 << USART_ICR_TCCF);
-
     if (CHECK_BIT(USART_ISR(uart), USART_ISR_IDLE) != 0U)
+    {
+        if (Recv_complete == false && CHECK_BIT(USART_ISR(uart), USART_ISR_RXNE) == 0U)
+        {
+            GPIO_BSRR_SET_PIN(GPIOC, 9U);
+
+            CLEAR_BIT(DMA_CCR3, DMA_CCR_EN); // disable channel
+            Recv_complete = true;
+        }
+
         *USART_ICR(uart) = (1 << USART_ICR_IDLECF);
-
-    data = data;
-
-    NVIC_CLEAR_PEND_IRQ(UARTx_irq_no[uartno - 1]);
-
-#else 
-
-    (void) uartno;
-
-#endif 
+    }
 }
 
 //---------------------------------------------------------
@@ -342,7 +311,7 @@ int uart_trns_buffer(struct Uart* uart, const void* buffer, size_t size)
 
 //---------------------------------------------------------
 
-int uart_recv_buffer(struct Uart* uart, void* buffer, size_t size)
+int uart_recv_buffer(struct Uart* uart, void* buffer, size_t size) // TODO IDLE 
 {
     if (uart == NULL)
         return UART_INV_PTR;
@@ -366,7 +335,7 @@ int uart_recv_buffer(struct Uart* uart, void* buffer, size_t size)
 
 bool is_trns_complete(void)
 {
-    return Trns_complete;
+    return Trns_complete; 
 }
 
 //---------------------------------------------------------
