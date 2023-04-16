@@ -142,7 +142,7 @@
 #define DMA_CNDTR_NDT 0
 
 #define SET_DMA_CNDTR_NDT(REG, value) PUPER_MODIFY_REG(REG, 0xFFFF, value, DMA_CNDTR_NDT)
-#define GET_DMA_CNDTR_NDT(REG) SUPER_CHECK_REG(REG, 0xFF, DMA_CNDTR_NDT)
+#define GET_DMA_CNDTR_NDT(REG) SUPER_CHECK_REG(REG, 0xFFFF, DMA_CNDTR_NDT)
 
 //---------------------------------------------------------
 

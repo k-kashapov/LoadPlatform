@@ -11,6 +11,7 @@
 
 #include "api.h"
 #include "uart.h"
+#include "crc.h"
 
 extern struct API API_host;
 
@@ -50,7 +51,10 @@ static void board_gpio_init(void);
 static void systick_init(uint32_t period_us);
 
 static int uart_init(struct Uart* uart);
+
 static int receive_code(struct Uart* uart);
+static int code_check_crc(uint8_t* code, uint32_t size);
+
 static void run_code(void);
 
 #ifdef TEST_UART
@@ -223,6 +227,25 @@ static int uart_init(struct Uart* uart)
     return 0;
 }
 
+//------------------------------------------
+// Calculate ans check CRC of received code
+//------------------------------------------
+
+static int code_check_crc(uint8_t* code, uint32_t size)
+{
+    crc_init(0xFFFFFFFF);
+    (void) code;
+    (void) size;
+
+    uint32_t calc_hash = crc32_calc(code, (size_t) (size - 4));
+    uint32_t recv_hash = *(uint32_t*) (code + size - 4);
+
+    if (calc_hash != recv_hash)
+        return -1;
+
+    return 0;
+}
+
 //-------------------------------
 // Receive and emplace user code
 //-------------------------------
@@ -232,26 +255,50 @@ static int receive_code(struct Uart* uart)
     int err = uart_recv_buffer(uart, (void*) USER_START, USER_MAX_PROG_SIZE);
     if (err < 0) return err;
 
-    while (is_recv_complete() == false)
-        continue;
+    int32_t res = 0;
+
     do 
     {
-        err = is_recv_complete();
-        if (err < 0) return err;
+        res = is_recv_complete();
+        if (res < 0) return res;
 
-    } while (err == 0);
+    } while (res == 0);
 
-    err = uart_trns_buffer(uart, (void*)USER_START, 2);
+    if (res < 4)
+        return -1; // Not enough data - 4 bytes are hash at the end 
+
+    err = code_check_crc((uint8_t*) USER_START, (uint32_t) res);
     if (err < 0) return err;
 
-    while (is_trns_complete() == 0)
-        continue;
+    // Send back for debug
+    //-----------------------
+    // err = uart_trns_buffer(uart, (void*)USER_START, res);
+    // if (err < 0) return err;
+    // while (is_trns_complete() == 0)
+    //     continue;
+
+    // uint32_t calc_hash = crc32_calc((uint8_t*) USER_START, (size_t) res - 4);
+    // err = uart_trns_buffer(uart, (void*)(&calc_hash), 4);
+    // if (err < 0) return err;
+    // while (is_trns_complete() == 0)
+    //     continue;
+
+    GPIO_BSRR_SET_PIN(GPIOC, 9U);
+
+    // uint32_t recv_hash = *((uint32_t*)((uint8_t*) USER_START + res - 4));
+
+    // err = uart_trns_buffer(uart, (void*)(&recv_hash), 4);
+    // if (err < 0) return err;
+    // while (is_trns_complete() == 0)
+    //     continue;
+
+    //-----------------------
 
     return 0;
 }
 
 //---------------------------
-// Preapre and run user code
+// Prepare and run user code
 //---------------------------
 
 static void __attribute__((noreturn)) run_code(void)

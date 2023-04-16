@@ -36,6 +36,9 @@ static bool Recv_complete = true;
 
 static int Recv_err = 0;
 
+static uint32_t Recv_cndt   = 0; // Holds last loaded CNDTR value 
+static uint32_t Recv_number = 0; // Actual number of received data after Recv_complete -> true
+
 //=========================================================
 
 int uart_setup(struct Uart* uart, const struct Uart_conf* uart_conf)
@@ -252,6 +255,7 @@ void dma_ch2_3_handler(void)
     if (CHECK_BIT(DMA_ISR, DMA_ISR_TCIF3) != 0)
     {
         Recv_complete = true;
+        Recv_number = Recv_cndt;
 
         *(DMA_IFCR) = (1 << DMA_ISR_TCIF3);
         CLEAR_BIT(DMA_CCR3, DMA_CCR_EN);
@@ -276,6 +280,17 @@ void uart2_handler(void)
 
 //---------------------------------------------------------
 
+static void recv_complete_routine(void)
+{
+    Recv_complete = true;
+    uint32_t cur_cndt = GET_DMA_CNDTR_NDT(DMA_CNDTR3);
+    Recv_number = Recv_cndt - cur_cndt;
+
+    CLEAR_BIT(DMA_CCR3, DMA_CCR_EN); // disable channel
+}
+
+//---------------------------------------------------------
+
 static void uart_handler(unsigned uartno)
 {
     uint32_t uart = UARTx[uartno - 1];
@@ -283,10 +298,7 @@ static void uart_handler(unsigned uartno)
     if (CHECK_BIT(USART_ISR(uart), USART_ISR_RTOF) != 0U)
     {
         if (Recv_complete == false)
-        {
-            Recv_complete = true;
-            CLEAR_BIT(DMA_CCR3, DMA_CCR_EN); // disable channel
-        }
+            recv_complete_routine();
 
         *USART_ICR(uart) = (1 << USART_ICR_RTOCF);
     }
@@ -295,12 +307,8 @@ static void uart_handler(unsigned uartno)
     {
         if (Recv_complete == false)
         {
-            Recv_complete = true;
+            recv_complete_routine();
             Recv_err = UART_RECV_PE;
-
-            //GPIO_BSRR_SET_PIN(GPIOC, 9U);
-
-            CLEAR_BIT(DMA_CCR3, DMA_CCR_EN); // disable channel
         }
 
         *USART_ICR(uart) = (1 << USART_ICR_PECF);
@@ -310,12 +318,8 @@ static void uart_handler(unsigned uartno)
     {
         if (Recv_complete == false)
         {
-            Recv_complete = true;
+            recv_complete_routine();
             Recv_err = UART_RECV_FE;
-
-            //GPIO_BSRR_SET_PIN(GPIOC, 9U);
-
-            CLEAR_BIT(DMA_CCR3, DMA_CCR_EN); // disable channel
         }
 
         *USART_ICR(uart) = (1 << USART_ICR_FECF);
@@ -325,12 +329,8 @@ static void uart_handler(unsigned uartno)
     {
         if (Recv_complete == false)
         {
-            Recv_complete = true;
+            recv_complete_routine();
             Recv_err = UART_RECV_ORE;
-
-            //GPIO_BSRR_SET_PIN(GPIOC, 9U);
-
-            CLEAR_BIT(DMA_CCR3, DMA_CCR_EN); // disable channel
         }
 
         *USART_ICR(uart) = (1 << USART_ICR_ORECF);
@@ -340,16 +340,13 @@ static void uart_handler(unsigned uartno)
     {
         if (Recv_complete == false)
         {
-            Recv_complete = true;
+            recv_complete_routine();
             Recv_err = UART_RECV_NF;
-
-            //GPIO_BSRR_SET_PIN(GPIOC, 9U);
-
-            CLEAR_BIT(DMA_CCR3, DMA_CCR_EN); // disable channel
         }
 
         *USART_ICR(uart) = (1 << USART_ICR_NFCF);
     }
+    
 }
 
 //---------------------------------------------------------
@@ -392,6 +389,8 @@ int uart_recv_buffer(struct Uart* uart, void* buffer, size_t size)
     SET_DMA_CNDTR_NDT(DMA_CNDTR3, size); // byte count
 
     Recv_complete = false;
+    Recv_cndt = size;
+
     SET_BIT(DMA_CCR3, DMA_CCR_EN); // enable channel
 
     return 0;
@@ -411,7 +410,7 @@ int is_recv_complete(void)
     if (Recv_complete == true)
     {
         if (Recv_err == 0)
-            return 1;
+            return (int) Recv_number;
         else 
             return Recv_err;
     }
