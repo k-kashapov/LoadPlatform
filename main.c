@@ -241,7 +241,7 @@ static int receive_code(struct Uart* uart)
 
     } while (err == 0);
 
-    err = uart_trns_buffer(uart, (void*)USER_START, 5);
+    err = uart_trns_buffer(uart, (void*)USER_START, 2);
     if (err < 0) return err;
 
     while (is_trns_complete() == 0)
