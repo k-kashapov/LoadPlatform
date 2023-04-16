@@ -29,10 +29,12 @@ static void uart_handler(unsigned uartno);
 
 #define DMA_CH2_3_IRQ 10U
 
+#define RECV_TIMEOUT_SEC 1.5f
+
 static bool Trns_complete = true;
 static bool Recv_complete = true;
 
-#define RECV_TIMEOUT_SEC 1.5f
+static int Recv_err = 0;
 
 //=========================================================
 
@@ -117,13 +119,19 @@ static void uart_usart_setup(struct Uart* uart, const struct Uart_conf* uart_con
         default: break;
     }
 
-    CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_M0);    // 1 Start bit, 8 data bits
+    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_M0);    // SB | 8-bit data | PB | STB
     CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_M1);    
+
+    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_PCE);   // Parity control enabled           
+    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_PS);    // Odd parity
+    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_PEIE);  // Parity Error Interrupt Enabled
+
+    SET_BIT(USART_CR3(uart->UARTx), USART_CR3_EIE); // Interrupt on Framing, Overrun & Noise errors
+
     CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_OVER8); // Oversampling by 16
-    CLEAR_BIT(USART_CR1(uart->UARTx), USART_CR1_PCE);   // Parity control disabled
 
     CLEAR_BIT(USART_CR2(uart->UARTx), USART_CR2_MSBFIRST); // Endianness: LSB first
-    SET_USART_CR2_STOP(uart->UARTx, USART_CR2_STOP_2);     // Number of stop bits: 2 stop bit
+    SET_USART_CR2_STOP(uart->UARTx, USART_CR2_STOP_1);     // Number of stop bits: 2 stop bit
 
     SET_USART_BRR(uart->UARTx, (uart_conf->frequency) / (uart_conf->baudrate));
 
@@ -132,7 +140,7 @@ static void uart_usart_setup(struct Uart* uart, const struct Uart_conf* uart_con
 
 //---------------------------------------------------------
 
-int uart_transmit_enable(struct Uart* uart) // TODO parity, checksum 
+int uart_transmit_enable(struct Uart* uart) // TODO checksum 
 {
     if (uart == NULL)
         return UART_INV_PTR;
@@ -183,11 +191,9 @@ int uart_receive_enable(struct Uart* uart)
 
     SET_BIT(DMA_CCR3, DMA_CCR_TCIE); // Transfer complete interrupt enable
 
-    //
     SET_USART_RTOR_RTO(uart->UARTx, (uint32_t) (uart->baudrate * RECV_TIMEOUT_SEC));
     SET_BIT(USART_CR2(uart->UARTx), USART_CR2_RTOEN);
-    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_RTOIE);
-    // 
+    SET_BIT(USART_CR1(uart->UARTx), USART_CR1_RTOIE); // Configure RTO
 
     SET_BIT(USART_CR1(uart->UARTx), USART_CR1_RE);
     while (CHECK_BIT(USART_ISR(uart->UARTx), USART_ISR_REACK) == 0U)
@@ -284,6 +290,66 @@ static void uart_handler(unsigned uartno)
 
         *USART_ICR(uart) = (1 << USART_ICR_RTOCF);
     }
+
+    if (CHECK_BIT(USART_ISR(uart), USART_ISR_PE) != 0U)
+    {
+        if (Recv_complete == false)
+        {
+            Recv_complete = true;
+            Recv_err = UART_RECV_PE;
+
+            //GPIO_BSRR_SET_PIN(GPIOC, 9U);
+
+            CLEAR_BIT(DMA_CCR3, DMA_CCR_EN); // disable channel
+        }
+
+        *USART_ICR(uart) = (1 << USART_ICR_PECF);
+    }
+
+    if (CHECK_BIT(USART_ISR(uart), USART_ISR_FE) != 0U)
+    {
+        if (Recv_complete == false)
+        {
+            Recv_complete = true;
+            Recv_err = UART_RECV_FE;
+
+            //GPIO_BSRR_SET_PIN(GPIOC, 9U);
+
+            CLEAR_BIT(DMA_CCR3, DMA_CCR_EN); // disable channel
+        }
+
+        *USART_ICR(uart) = (1 << USART_ICR_FECF);
+    }
+
+    if (CHECK_BIT(USART_ISR(uart), USART_ISR_ORE) != 0U)
+    {
+        if (Recv_complete == false)
+        {
+            Recv_complete = true;
+            Recv_err = UART_RECV_ORE;
+
+            //GPIO_BSRR_SET_PIN(GPIOC, 9U);
+
+            CLEAR_BIT(DMA_CCR3, DMA_CCR_EN); // disable channel
+        }
+
+        *USART_ICR(uart) = (1 << USART_ICR_ORECF);
+    }
+
+    if (CHECK_BIT(USART_ISR(uart), USART_ISR_NF) != 0U)
+    {
+        if (Recv_complete == false)
+        {
+            Recv_complete = true;
+            Recv_err = UART_RECV_NF;
+
+            //GPIO_BSRR_SET_PIN(GPIOC, 9U);
+
+            CLEAR_BIT(DMA_CCR3, DMA_CCR_EN); // disable channel
+        }
+
+        *USART_ICR(uart) = (1 << USART_ICR_NFCF);
+    }
 }
 
 //---------------------------------------------------------
@@ -333,16 +399,24 @@ int uart_recv_buffer(struct Uart* uart, void* buffer, size_t size)
 
 //---------------------------------------------------------
 
-bool is_trns_complete(void)
+int is_trns_complete(void)
 {
-    return Trns_complete; 
+    return (int) Trns_complete; 
 }
 
 //---------------------------------------------------------
 
-bool is_recv_complete(void)
+int is_recv_complete(void)
 {
-    return Recv_complete;
+    if (Recv_complete == true)
+    {
+        if (Recv_err == 0)
+            return 1;
+        else 
+            return Recv_err;
+    }
+    else 
+        return 0;
 }
 
 //---------------------------------------------------------

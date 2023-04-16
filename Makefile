@@ -124,6 +124,6 @@ gdb: FORCE $(BINARY_FLASH)
 uart: FORCE
 	- rm -f minicom.log 
 	sudo cp minirc.stm32f051 /etc/minicom/
-	sudo minicom -D /dev/ttyUSB0 stm32f051 -C minicom.log
+	sudo minicom -H -D /dev/ttyUSB0 stm32f051 -C minicom.log
 
 FORCE:

@@ -50,7 +50,11 @@ enum Uart_error
     UART_TRNS_DIS       = -5,
     UART_NO_SUPPORT     = -6,
     UART_TRNS_NOT_COMPL = -7,
-    UART_RECV_NOT_COMPL = -8
+    UART_RECV_NOT_COMPL = -8,
+    UART_RECV_PE        = -9,
+    UART_RECV_FE        = -10,
+    UART_RECV_ORE       = -11,
+    UART_RECV_NF        = -12,
 };
 
 //=========================================================
@@ -73,7 +77,7 @@ int uart_recv_string_n(struct Uart* uart, uint8_t* data, unsigned n);
 int uart_trns_buffer(struct Uart* uart, const void* buffer, size_t size);
 int uart_recv_buffer(struct Uart* uart, void* buffer, size_t size);
 
-bool is_trns_complete(void);
-bool is_recv_complete(void);
+int is_trns_complete(void);
+int is_recv_complete(void);
 
 void uart_wait_for_tc(struct Uart* uart);

@@ -234,13 +234,17 @@ static int receive_code(struct Uart* uart)
 
     while (is_recv_complete() == false)
         continue;
+    do 
+    {
+        err = is_recv_complete();
+        if (err < 0) return err;
 
-    GPIO_BSRR_SET_PIN(GPIOC, 9U);
+    } while (err == 0);
 
-    err = uart_trns_buffer(uart, (void*)USER_START, 4);
+    err = uart_trns_buffer(uart, (void*)USER_START, 5);
     if (err < 0) return err;
 
-    while (is_trns_complete() == false)
+    while (is_trns_complete() == 0)
         continue;
 
     return 0;
@@ -301,7 +305,7 @@ static int run_uart_tests(struct Uart* uart)
     int err = uart_trns_buffer(uart, str, sizeof(str));
     if (err < 0) return err;
 
-    while (is_trns_complete() == false);
+    while (is_trns_complete() == 0);
 
     err = uart_transmit_disable(uart);
     if (err < 0) return err;
@@ -329,13 +333,13 @@ static int run_uart_tests(struct Uart* uart)
     err = uart_recv_buffer(uart, &inp2, sizeof(char));
     if (err < 0) return err;
 
-    while (is_trns_complete() == false || is_recv_complete() == false)
+    while (is_trns_complete() == 0 || is_recv_complete() == 0)
         continue;
 
     err = uart_trns_buffer(uart, &inp1, sizeof(char));
     if (err < 0) return err;
 
-    while (is_trns_complete() == false);
+    while (is_trns_complete() == 0);
 
     err = uart_trns_buffer(uart, &inp2, sizeof(char));
     if (err < 0) return err;
