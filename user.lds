@@ -1,12 +1,12 @@
-ENTRY(user_start);
+ENTRY(__reset_handler);
 
-SRAM_VADDR  = 0x20000400;
-SRAM_PADDR  = 0x20000400;
-SRAM_SIZE   = 0x00002000;
+RAM_VADDR  = 0x20000400;
+RAM_PADDR  = 0x20000400;
+RAM_SIZE   = 0x00002000;
 
 MEMORY
 {
-    SRAM   (rwx) : ORIGIN =  SRAM_VADDR, LENGTH =  SRAM_SIZE
+    RAM   (rwx) : ORIGIN =  RAM_VADDR, LENGTH =  RAM_SIZE
 }
 
 SECTIONS
@@ -17,23 +17,15 @@ SECTIONS
     {
         *(.text)
         *(.rodata)
-    } > SRAM AT >SRAM
+        
+    } > RAM AT >RAM
 
     .data :
     {
         *(.data)
-    } >SRAM AT >SRAM
-
-    .bss :
-    {
-        . = ALIGN(4);
-        __bss_start_vma = .;
-
         *(.bss)
 
-        . = ALIGN(4);
-        __bss_end_vma = .;
-    } > SRAM AT >SRAM
+    } >RAM AT >RAM
 
     /DISCARD/ :
     {

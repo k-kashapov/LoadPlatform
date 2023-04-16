@@ -3,12 +3,9 @@
 
 #include "common/api.h"
 
-struct API api = {};
-uint32_t api_ptr = (uint32_t) &api;
-
-int main()
+int umain(struct API* api)
 {
-    api.blue_led_on();
+    api->blue_led_on();
 
     static bool green_led_is_off = true;
     static bool blue_led_is_off  = false;
@@ -17,23 +14,23 @@ int main()
     {
         if (green_led_is_off)
         {
-            api.green_led_on();
+            api->green_led_on();
             green_led_is_off = false;
         }
         else 
         {
-            api.green_led_off();
+            api->green_led_off();
             green_led_is_off = true;
         }
 
         if (blue_led_is_off)
         {
-            api.blue_led_on();
+            api->blue_led_on();
             blue_led_is_off = false;
         }
         else 
         {
-            api.blue_led_off();
+            api->blue_led_off();
             blue_led_is_off = true;
         }
     }

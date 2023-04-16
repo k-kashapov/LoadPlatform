@@ -54,13 +54,13 @@ binary_data = []
 with open(sys.argv[1], mode='rb') as binary:
     
     binary_data = binary.read() # read binary file to send
-    print(binary_data)
-
-    hash = zlib.crc32(binary_data)
-    print(hex(hash))
+    # print(binary_data)
 
     while (len(binary_data) % 4) != 0:
         binary_data += b'\0' # append zero bytes for word alignment
+
+    hash = zlib.crc32(binary_data)
+    # print(hex(hash))
 
     binary_data += hash.to_bytes(4, "little")
     # print(binary_data) 

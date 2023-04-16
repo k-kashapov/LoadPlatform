@@ -74,6 +74,8 @@ clean:
 # User prog
 #----------------------
 
+.PHONY: send
+
 ULDFLAGS = \
 	 -Wall \
 	 -Wextra \
@@ -92,16 +94,19 @@ USOURCES = user.S \
 UOBJECTS_HALFWAY_DONE = $(USOURCES:%.c=build/%.o)
 UOBJECTS              = $(UOBJECTS_HALFWAY_DONE:%.S=build/%.o)
 
-UEXECUTABLE_FLASH = build/user.elf
-UBINARY_FLASH     = build/user.bin
+UEXECUTABLE = build/user.elf
+UBINARY     = build/user.bin
 
-ucode: $(UEXECUTABLE_FLASH) $(UBINARY_FLASH) $(USOURCES)
+ucode: $(UEXECUTABLE) $(UBINARY) $(USOURCES) send
 
-$(UEXECUTABLE_FLASH): $(UOBJECTS)
+$(UEXECUTABLE): $(UOBJECTS)
 	$(CC) $(ULDFLAGS) $(UOBJECTS) -o $@
 
-$(UBINARY_FLASH): $(UEXECUTABLE_FLASH)
+$(UBINARY): $(UEXECUTABLE)
 	arm-none-eabi-objcopy -O binary $< $@
+
+send: 
+	sudo ./usart.py $(UBINARY)
 
 #----------------------
 # Hardware interaction

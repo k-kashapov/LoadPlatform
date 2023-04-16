@@ -8,10 +8,14 @@
 #define BLUE_LED_GPIOC_PIN   8U
 #define GREEN_LED_GPIOC_PIN  9U
 
-struct API API_host= { .blue_led_on   = blue_led_on,
-                       .blue_led_off  = blue_led_off,
-                       .green_led_on  = green_led_on,
-                       .green_led_off = green_led_off };
+__attribute__ ((section (".api"))) 
+struct API API_host = 
+{
+    .blue_led_on   = blue_led_on,
+    .blue_led_off  = blue_led_off,
+    .green_led_on  = green_led_on,
+    .green_led_off = green_led_off 
+};
 
 //=========================================================
 

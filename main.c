@@ -183,21 +183,21 @@ void systick_handler(void)
     static unsigned handler_ticks = 0U;
     handler_ticks += 1U;
     
-    static bool led_is_on = false;
+    // static bool led_is_on = false;
 
-    if ((handler_ticks % SYSTICK_FREQ) == 0)
-    {
-        if (led_is_on == false)
-        {
-            led_is_on = true;
-            GPIO_BSRR_SET_PIN(GPIOC, BLUE_LED_GPIOC_PIN);
-        }
-        else 
-        {
-            led_is_on = false;
-            GPIO_BRR_RESET_PIN(GPIOC, BLUE_LED_GPIOC_PIN);
-        }
-    }
+    // if ((handler_ticks % SYSTICK_FREQ) == 0)
+    // {
+    //     if (led_is_on == false)
+    //     {
+    //         led_is_on = true;
+    //         GPIO_BSRR_SET_PIN(GPIOC, BLUE_LED_GPIOC_PIN);
+    //     }
+    //     else 
+    //     {
+    //         led_is_on = false;
+    //         GPIO_BRR_RESET_PIN(GPIOC, BLUE_LED_GPIOC_PIN);
+    //     }
+    // }
 }
 
 //-----------
@@ -277,23 +277,6 @@ static int receive_code(struct Uart* uart)
     // while (is_trns_complete() == 0)
     //     continue;
 
-    // uint32_t calc_hash = crc32_calc((uint8_t*) USER_START, (size_t) res - 4);
-    // err = uart_trns_buffer(uart, (void*)(&calc_hash), 4);
-    // if (err < 0) return err;
-    // while (is_trns_complete() == 0)
-    //     continue;
-
-    GPIO_BSRR_SET_PIN(GPIOC, 9U);
-
-    // uint32_t recv_hash = *((uint32_t*)((uint8_t*) USER_START + res - 4));
-
-    // err = uart_trns_buffer(uart, (void*)(&recv_hash), 4);
-    // if (err < 0) return err;
-    // while (is_trns_complete() == 0)
-    //     continue;
-
-    //-----------------------
-
     return 0;
 }
 
@@ -303,11 +286,8 @@ static int receive_code(struct Uart* uart)
 
 static void __attribute__((noreturn)) run_code(void)
 {
-    // struct API* api_guest = (struct API*) *((uint32_t*) USER_API_PTR_ADDR);
-    // *api_guest = API_host;
-
-    // __asm__ volatile("mov sp, %0"::"r"(USER_STACK));
-    // ((void (*)(void)) USER_EXEC_START)();
+    __asm__ volatile("mov sp, %0"::"r"(USER_STACK));
+    ((umain_t) USER_EXEC_START)(&API_host);
     
     while (1)   
         continue;
