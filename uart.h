@@ -37,6 +37,8 @@ struct Uart
 
     bool recv_enabled;
     bool trns_enabled;
+
+    size_t baudrate;
 };
 
 enum Uart_error
