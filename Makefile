@@ -10,8 +10,7 @@ CFLAGS = \
 	-Wextra \
 	-Werror \
 	-march=armv6-m \
-	-mcpu=cortex-m0 \
-	-Os
+	-mcpu=cortex-m0 
 
 LDFLAGS = \
 	-Wall \

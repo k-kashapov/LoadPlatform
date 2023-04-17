@@ -1,6 +1,6 @@
 #pragma once 
 
-struct API // TODO pass as argument, bss -> data, divide section mb, lds
+struct API
 {
     void (*blue_led_on )(void);
     void (*green_led_on)(void);

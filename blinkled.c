@@ -5,33 +5,45 @@
 
 int umain(struct API* api)
 {
-    api->blue_led_on();
+    __asm__ volatile("nop"::);
+    __asm__ volatile("nop"::);
+    __asm__ volatile("nop"::);
 
-    static bool green_led_is_off = true;
-    static bool blue_led_is_off  = false;
+    // api->blue_led_on();
+    // static bool blue_led_is_off  = false;
+
+    // bool green_led_is_off = true;
 
     while (1)
     {
-        if (green_led_is_off)
-        {
-            api->green_led_on();
-            green_led_is_off = false;
-        }
-        else 
-        {
-            api->green_led_off();
-            green_led_is_off = true;
-        }
+        // if (green_led_is_off)
+        // {
+        //     api->green_led_on();
+        //     green_led_is_off = false;
+        // }
+        // else if (!green_led_is_off)
+        // {
+        //     api->green_led_off();
+        //     green_led_is_off = true;
+        // }
 
-        if (blue_led_is_off)
-        {
-            api->blue_led_on();
-            blue_led_is_off = false;
-        }
-        else 
-        {
-            api->blue_led_off();
-            blue_led_is_off = true;
-        }
+        // if (blue_led_is_off)
+        // {
+        //     api->blue_led_on();
+        //     blue_led_is_off = false;
+        // }
+        // else if (!blue_led_is_off)
+        // {
+        //     api->blue_led_off();
+        //     blue_led_is_off = true;
+        // }
+
+        api->green_led_on();
+
+        for (unsigned iter = 0; iter < 10000000; iter++);
+
+        api->green_led_off();
     }
+
+    return 0;
 }

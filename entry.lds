@@ -30,6 +30,9 @@ SECTIONS
         __data_start_vma = .;
 
         *(.data)
+
+        . = ALIGN(4);
+
         *(.api)
 
         . = ALIGN(4);

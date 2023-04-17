@@ -40,8 +40,7 @@ extern struct API API_host;
 #define USER_START SRAM_VADDR + USER_OFFS
 #define USER_STACK SRAM_VADDR + SRAM_SIZE
 
-#define USER_API_PTR_ADDR  USER_START
-#define USER_EXEC_START    USER_START + 0x2U
+#define USER_EXEC_START USER_START + 1
 #define USER_MAX_PROG_SIZE SRAM_SIZE - USER_OFFS
 
 //=========================================================
