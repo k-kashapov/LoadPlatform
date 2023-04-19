@@ -67,11 +67,11 @@ void game(void) {
             // view_angle += 0.002;
             // if      (view_angle >=  2 * PI) view_angle -= 2 * PI;
             // else if (view_angle <= -2 * PI) view_angle += 2 * PI;
+        }
 
-            plr_x -= 0.0003;
-            if (plr_x <= 1) {
-                plr_x = 6;
-            }
+        plr_x -= 0.01;
+        if (plr_x <= 1) {
+            plr_x = 6;
         }
 
         scrn_draw();
