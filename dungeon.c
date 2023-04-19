@@ -1,21 +1,29 @@
 #include <stdint.h>
 #include "trigTables.h"
-#include "common/api.h"
+#include "screen.h"
+// #include "common/api.h"
 
-#define MAP_VALUE(x, y) (MAP[y] & (1 << (7 - x)))
-#define PI 3.1415
+// <====< WARNING >====>
+// All floating point values are replaced with
+// integer counterparts * 1000 to save space.
 
-int sin_aprx(int x) {
-    unsigned idx = (unsigned)(x / (2 * PI) * 100) % 100;
+#define MAP_VALUE(x, y) (MAP[y / 1000] & (1 << (7 - (x / 1000) )))
+#define PI 3141
+
+// TODO: tables are symmetrical so they can be optimized further
+int sin_aprx(int x_deg) {
+    unsigned idx = (unsigned)(x_deg * 100 / 180) % 100;
     return sineTable[idx];
 }
 
-int cos_aprx(int x) {
-    unsigned idx = (unsigned)(x / (2 * PI) * 100) % 100;
+int cos_aprx(int x_deg) {
+    unsigned idx = (unsigned)(x_deg * 100 / 180) % 100;
     return cosTable[idx];
 }
 
-int umain(struct API* api) {
+void game(void) {
+
+// int umain(struct API* api) {
     // <-----< Settings >----->
 
     const uint8_t MAP[8] = {
@@ -28,11 +36,8 @@ int umain(struct API* api) {
         0b10000001,
         0b11111111,
     };
-
-    const int FOV   = SCRN_WIDTH;
-    const int vstep = FOV / SCRN_WIDTH;
     
-    const int draw_dist = 5.0;
+    const int draw_dist = 5000;
     const int ray_steps = 20;
     const int step_dist = draw_dist / ray_steps;
     
@@ -41,27 +46,30 @@ int umain(struct API* api) {
     // <----< Player position >----->
 
     // Current angle between view direction and Ox axis
-    int view_angle = 0;
+    int view_angle = 0; // Degrees
     
-    int plr_x = 6;
-    int plr_y = 6;
+    int plr_x = 6000;
+    int plr_y = 6000;
 
     // <----< Main loop >----->
     while (1) {
-        api->scrn_clear(0x00);
+        scrn_clear(0xFF);
 
         // Ray cast
         for (int x = -SCRN_WIDTH / 2; x < SCRN_WIDTH / 2; x++) {
-            int ray_angle = view_angle + vstep * x;
-            for (int step = 0; step < ray_steps; step++) {
-                unsigned check_x = (unsigned)(plr_x + cos_aprx(ray_angle) * step_dist * step);
-                unsigned check_y = (unsigned)(plr_y + sin_aprx(ray_angle) * step_dist * step);
+            int ray_angle = view_angle + x;
 
-                if (check_x >= 8 || check_y >= 8) break;
+            for (int step = 0; step < ray_steps; step++) {
+                unsigned check_x = (unsigned)(plr_x + cos_aprx(ray_angle) * step_dist * step / 1000);
+                unsigned check_y = (unsigned)(plr_y + sin_aprx(ray_angle) * step_dist * step / 1000);
+
+                if (check_x >= 8000 || check_y >= 8000) break;
+
+                scrn_yline(x + SCRN_WIDTH / 2, (SCRN_HEIGHT - 20) / 2, 20);
 
                 if (MAP_VALUE(check_x, check_y)) {
                     unsigned line_len = (unsigned)((ray_steps - step) * 2);
-                    api->scrn_yline(x + SCRN_WIDTH / 2, (SCRN_HEIGHT - line_len) / 2, line_len);
+                    scrn_yline(x + SCRN_WIDTH / 2, (SCRN_HEIGHT - line_len) / 2, line_len);
                     break;
                 }
             }
@@ -79,12 +87,7 @@ int umain(struct API* api) {
             
         // }
 
-        plr_x -= 0.01;
-        if (plr_x <= 1) {
-            plr_x = 6;
-        }
-
-        api->scrn_draw();
+        scrn_draw();
 
         for (int i = 0; i < 250000; i++)
             ;

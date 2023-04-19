@@ -282,6 +282,8 @@ static void __attribute__((noreturn)) run_code(void)
 // Main
 //------
 
+void game(void);
+
 int main()
 {
     board_clocking_init();
@@ -300,11 +302,14 @@ int main()
     if (err < 0) return err;
 #endif 
 
-    SPI_init(BAUD_DIV128);
+    SPI_init(BAUD_DIV256);
     scrn_init(0);
-    scrn_box(1, 1, 10, 10);
-    scrn_box(10, 10, 10, 10);
+    // scrn_box(1, 1, 10, 10);
+    // scrn_box(10, 10, 10, 10);
+    // scrn_clear(0xFF);
     scrn_draw();
+
+    // game();
 
     err = receive_code(&uart);
     if (err < 0) return err;
