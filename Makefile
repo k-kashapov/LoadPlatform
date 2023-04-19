@@ -37,6 +37,9 @@ SOURCES = \
 	uart.c \
 	main.c \
 	api.c  \
+	screen.c \
+	spi.c \
+	dungeon.c \
 	crc.c
 
 OBJECTS_HALFWAY_DONE = $(SOURCES:%.c=build/%.o)
