@@ -12,8 +12,14 @@
 #include "api.h"
 #include "uart.h"
 #include "crc.h"
+#include "button.h"
+
+extern int api_init(void);
+extern void api_update(unsigned handler_ticks);
 
 extern struct API API_host;
+
+//=========================================================
 
 // #define TEST_UART
 
@@ -159,18 +165,10 @@ static void systick_init(uint32_t period_us)
 // GPIO configuration
 //--------------------
 
-static void board_gpio_init()
+static void board_gpio_init(void)
 {
-    // (1) Enable GPIOC clocking:
-    SET_BIT(REG_RCC_AHBENR, REG_RCC_AHBENR_IOPCEN);
-
-    // Configure PC8 & PC9 mode:
-    SET_GPIO_IOMODE(GPIOC, BLUE_LED_GPIOC_PIN, GPIO_IOMODE_GEN_PURPOSE_OUTPUT);
-    SET_GPIO_IOMODE(GPIOC, GREEN_LED_GPIOC_PIN, GPIO_IOMODE_GEN_PURPOSE_OUTPUT);
-
-    // Configure PC8 & PC9 type:
-    SET_GPIO_OTYPE(GPIOC, BLUE_LED_GPIOC_PIN, GPIO_OTYPE_PUSH_PULL);
-    SET_GPIO_OTYPE(GPIOC, GREEN_LED_GPIOC_PIN, GPIO_OTYPE_PUSH_PULL);
+    // nothing to init for now
+    return;
 }
 
 //--------------------
@@ -182,21 +180,7 @@ void systick_handler(void)
     static unsigned handler_ticks = 0U;
     handler_ticks += 1U;
     
-    // static bool led_is_on = false;
-
-    // if ((handler_ticks % SYSTICK_FREQ) == 0)
-    // {
-    //     if (led_is_on == false)
-    //     {
-    //         led_is_on = true;
-    //         GPIO_BSRR_SET_PIN(GPIOC, BLUE_LED_GPIOC_PIN);
-    //     }
-    //     else 
-    //     {
-    //         led_is_on = false;
-    //         GPIO_BRR_RESET_PIN(GPIOC, BLUE_LED_GPIOC_PIN);
-    //     }
-    // }
+    api_update(handler_ticks);
 }
 
 //-----------
@@ -302,8 +286,11 @@ int main()
     board_gpio_init();
     systick_init(SYSTICK_PERIOD_US);
 
+    int err = api_init();
+    if (err < 0) return err;
+
     struct Uart uart = {};
-    int err = uart_init(&uart);
+    err = uart_init(&uart);
     if (err < 0) return err;
 
 #ifdef TEST_UART

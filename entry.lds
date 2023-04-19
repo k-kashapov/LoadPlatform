@@ -33,6 +33,7 @@ SECTIONS
 
         . = ALIGN(4);
 
+        *(.api_const)
         *(.api)
 
         . = ALIGN(4);
