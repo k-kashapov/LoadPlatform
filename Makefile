@@ -76,7 +76,11 @@ clean:
 # User prog
 #----------------------
 
-.PHONY: send
+# For error msgs
+bold := $(shell tput bold)
+sgr0 := $(shell tput sgr0)
+
+.PHONY: send checkarg
 
 ULDFLAGS = \
 	 -Wall \
@@ -91,7 +95,7 @@ ULDFLAGS = \
 	 -Wl,-T,user.lds
 
 USOURCES = user.S \
-		   umain.c
+		   $(USRC)
 
 UOBJECTS_HALFWAY_DONE = $(USOURCES:%.c=build/%.o)
 UOBJECTS              = $(UOBJECTS_HALFWAY_DONE:%.S=build/%.o)
@@ -99,7 +103,12 @@ UOBJECTS              = $(UOBJECTS_HALFWAY_DONE:%.S=build/%.o)
 UEXECUTABLE = build/user.elf
 UBINARY     = build/user.bin
 
-ucode: $(UEXECUTABLE) $(UBINARY) $(USOURCES) send
+ucode: checkarg $(UEXECUTABLE) $(UBINARY) $(USOURCES) send
+
+checkarg:
+ifeq ($(USRC), $(nullstring))
+	$(error $(bold)fatal error$(sgr0): no input files, use: USRC=<source> make ucode)
+endif 
 
 $(UEXECUTABLE): $(UOBJECTS)
 	$(CC) $(ULDFLAGS) $(UOBJECTS) -o $@
