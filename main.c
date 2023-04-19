@@ -8,7 +8,9 @@
 #include "inc/uart.h"
 #include "inc/sleep.h"
 #include "inc/systick.h"
+#include "inc/spi.h"
 
+#include "screen.h"
 #include "api.h"
 #include "uart.h"
 #include "crc.h"
@@ -297,6 +299,12 @@ int main()
     err = run_uart_tests(&uart);
     if (err < 0) return err;
 #endif 
+
+    SPI_init(BAUD_DIV128);
+    scrn_init(0);
+    scrn_box(1, 1, 10, 10);
+    scrn_box(10, 10, 10, 10);
+    scrn_draw();
 
     err = receive_code(&uart);
     if (err < 0) return err;

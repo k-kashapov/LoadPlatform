@@ -38,7 +38,10 @@ SOURCES = \
 	main.c \
 	api.c \
 	crc.c \
-	button.c
+	button.c \
+	screen.c \
+	spi.c \
+	dungeon.c 
 
 OBJECTS_HALFWAY_DONE = $(SOURCES:%.c=build/%.o)
 OBJECTS              = $(OBJECTS_HALFWAY_DONE:%.S=build/%.o)
