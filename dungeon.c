@@ -1,15 +1,18 @@
 #include "screen.h"
 #include "inc/arm.h"
+#include "trigTables.h"
 
 #define MAP_VALUE(x, y) (MAP[y] & (1 << (7 - x)))
 #define PI 3.1415
 
-float sin_aprx(int x) {
-    return x - x*x*x / 6;
+float sin_aprx(float x) {
+    unsigned idx = (unsigned)(x / (2 * PI) * 100) % 100;
+    return sineTable[idx];
 }
 
-float cos_aprx(int x) {
-    return 1 - x * x / 2;
+float cos_aprx(float x) {
+    unsigned idx = (unsigned)(x / (2 * PI) * 100) % 100;
+    return cosTable[idx];
 }
 
 void game(void) {
@@ -52,8 +55,7 @@ void game(void) {
                 unsigned check_x = (unsigned)(plr_x + cos_aprx(ray_angle) * step_dist * step);
                 unsigned check_y = (unsigned)(plr_y + sin_aprx(ray_angle) * step_dist * step);
 
-                if (check_x >= 8 || check_y >= 8 ||
-                    check_x  < 0 || check_y < 0) break;
+                if (check_x >= 8 || check_y >= 8) break;
 
                 if (MAP_VALUE(check_x, check_y)) {
                     unsigned line_len = (ray_steps - step) * 4;
