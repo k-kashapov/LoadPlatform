@@ -315,7 +315,7 @@ int main()
     if (err < 0) return err;
 #endif 
 
-    SPI_init(BAUD_DIV2);
+    SPI_init(BAUD_DIV32);
     scrn_init(0);
     scrn_box(1, 1, 10, 10);
     scrn_box(10, 10, 10, 10);

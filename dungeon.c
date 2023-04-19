@@ -36,6 +36,8 @@ void game(void) {
     const int   ray_steps = 20;
     const float step_dist = draw_dist / ray_steps;
     
+    const float plr_spd = 0.1;
+
     // <----< Player position >----->
 
     // Current angle between view direction and Ox axis
@@ -68,6 +70,14 @@ void game(void) {
             // if      (view_angle >=  2 * PI) view_angle -= 2 * PI;
             // else if (view_angle <= -2 * PI) view_angle += 2 * PI;
         }
+
+        // if (button_left) {
+        //     plr_x += sin_aprx(view_angle) * plr_spd;
+        //     plr_y += cos_aprx(view_angle) * plr_spd;
+        // }
+        // if (button_right) {
+            
+        // }
 
         plr_x -= 0.01;
         if (plr_x <= 1) {
