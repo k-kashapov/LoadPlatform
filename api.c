@@ -4,6 +4,7 @@
 #include "inc/rcc.h"
 #include "api.h"
 #include "button.h"
+#include "screen.h"
 
 //=========================================================
 
@@ -22,11 +23,19 @@ int is_button_pressed(unsigned num);
 __attribute__ ((section (".api_const"))) 
 const struct API API_host = 
 {
-    .blue_led_on       = blue_led_on,
-    .blue_led_off      = blue_led_off,
-    .green_led_on      = green_led_on,
-    .green_led_off     = green_led_off,
-    .is_button_pressed = is_button_pressed
+    .blue_led_on = blue_led_on,
+    .blue_led_off = blue_led_off,
+    .green_led_on = green_led_on,
+    .green_led_off = green_led_off,
+    .is_button_pressed = is_button_pressed,
+    .scrn_clear = scrn_clear,
+    .scrn_draw = scrn_draw,
+    .scrn_set_pxl = scrn_set_pxiel,
+    .scrn_clr_pxl = scrn_clr_pxiel,
+    .scrn_inv_pxl = scrn_inv_pxiel,
+    .scrn_xline = scrn_xline,
+    .scrn_yline = scrn_yline,
+    .scrn_box = scrn_box
 };
 
 __attribute__ ((section (".api"))) 
@@ -52,6 +61,9 @@ int api_init(void)
         int err = button_setup(&buttons[iter], GPIOA, iter);
         if (err < 0) return err;
     }
+
+    SPI_init(BAUD_DIV128);
+    scrn_init(0);
 
     return 0;
 }
