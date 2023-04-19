@@ -25,7 +25,7 @@ extern struct API API_host;
 #define BLUE_LED_GPIOC_PIN   8U
 #define GREEN_LED_GPIOC_PIN  9U
 
-#define SYSTICK_PERIOD_US 10U
+#define SYSTICK_PERIOD_US 100U
 #define SYSTICK_FREQ (1000000U / SYSTICK_PERIOD_US)
 
 #define UART_BAUDRATE 9600U
@@ -283,7 +283,7 @@ static int receive_code(struct Uart* uart)
 // Prepare and run user code
 //---------------------------
 
-static void __attribute__((noreturn)) run_code(void)
+static void run_code(void)
 {
     __asm__ volatile("mov sp, %0"::"r"(USER_STACK));
     ((umain_t) USER_EXEC_START)(&API_host);
@@ -300,7 +300,7 @@ int main()
 {
     board_clocking_init();
     board_gpio_init();
-    systick_init(SYSTICK_PERIOD_US);
+    // systick_init(SYSTICK_PERIOD_US);
 
     struct Uart uart = {};
     int err = uart_init(&uart);

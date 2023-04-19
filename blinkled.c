@@ -14,8 +14,7 @@ int umain(struct API* api)
 
     // bool green_led_is_off = true;
 
-    while (1)
-    {
+    while (1) {
         // if (green_led_is_off)
         // {
         //     api->green_led_on();
@@ -38,9 +37,11 @@ int umain(struct API* api)
         //     blue_led_is_off = true;
         // }
 
+        for (volatile unsigned iter = 0; iter < 100000; iter++);
+
         api->green_led_on();
 
-        for (unsigned iter = 0; iter < 10000000; iter++);
+        for (volatile unsigned iter = 0; iter < 100000; iter++);
 
         api->green_led_off();
     }
