@@ -95,7 +95,7 @@ ULDFLAGS = \
 	 -Wl,-T,user.lds
 
 USOURCES = user.S \
-		   $(USRC)
+		   $(USRC:%=%.c)
 
 UOBJECTS_HALFWAY_DONE = $(USOURCES:%.c=build/%.o)
 UOBJECTS              = $(UOBJECTS_HALFWAY_DONE:%.S=build/%.o)
