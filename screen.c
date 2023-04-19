@@ -128,7 +128,7 @@ void scrn_init(uint8_t rotated) {
 void scrn_clear(uint8_t value) {
     SCRN_MODE_SET(MODE_DATA);
     for (unsigned byte = 0; byte < SCRN_SIZ_BYTES; byte++) {
-        SPI_send_byte(value);
+        // SPI_send_byte(value);
         FrameBuffer[byte] = value;
     }
 }
