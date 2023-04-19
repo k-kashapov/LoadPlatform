@@ -84,11 +84,11 @@ int umain(struct API* api) {
         // }
 
         if (api->is_button_pressed(0)) {
-            view_angle += 8;
+            view_angle -= 8;
         }
 
         if (api->is_button_pressed(1)) {
-            view_angle -= 8;
+            view_angle += 8;
         }
 
         if (api->is_button_pressed(2)) {
