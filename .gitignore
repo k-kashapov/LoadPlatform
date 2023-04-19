@@ -7,3 +7,4 @@
 *.log
 binary/ 
 __pycache__/
+*.bin
