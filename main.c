@@ -283,7 +283,7 @@ static int receive_code(struct Uart* uart)
 // Prepare and run user code
 //---------------------------
 
-static void run_code(void)
+static void __attribute__((noreturn)) run_code(void)
 {
     __asm__ volatile("mov sp, %0"::"r"(USER_STACK));
     ((umain_t) USER_EXEC_START)(&API_host);
@@ -300,7 +300,7 @@ int main()
 {
     board_clocking_init();
     board_gpio_init();
-    // systick_init(SYSTICK_PERIOD_US);
+    systick_init(SYSTICK_PERIOD_US);
 
     struct Uart uart = {};
     int err = uart_init(&uart);

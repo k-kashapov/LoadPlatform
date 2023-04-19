@@ -4,7 +4,6 @@
 
 import serial
 import sys
-# import crcmod
 import zlib
 
 #=========================================================
