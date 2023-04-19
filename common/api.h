@@ -1,6 +1,8 @@
 #pragma once 
 
 #define BUTTONS_NUM 4
+#define SCRN_WIDTH 128
+#define SCRN_HEIGHT 64
 
 struct API
 {

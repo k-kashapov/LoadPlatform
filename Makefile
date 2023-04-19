@@ -5,6 +5,7 @@
 CC = arm-none-eabi-gcc
 
 CFLAGS = \
+	-Os \
 	-std=c18 \
 	-Wall \
 	-Wextra \
@@ -13,6 +14,7 @@ CFLAGS = \
 
 LDFLAGS = \
 	-Wall \
+	-Os \
 	-Wextra \
 	-Werror \
 	-Wl,--start-group -lgcc -lc -lg -Wl,--end-group -Wl,--gc-sections \
