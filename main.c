@@ -44,7 +44,7 @@ extern struct API API_host;
 #define SRAM_VADDR 0x20000000U
 #define SRAM_PADDR 0x20000000U
 
-#define USER_OFFS  0x00000400U
+#define USER_OFFS  0x00000800U
 #define USER_START SRAM_VADDR + USER_OFFS
 #define USER_STACK SRAM_VADDR + SRAM_SIZE
 
@@ -282,8 +282,6 @@ static void __attribute__((noreturn)) run_code(void)
 // Main
 //------
 
-void game(void);
-
 int main()
 {
     board_clocking_init();
@@ -306,10 +304,8 @@ int main()
     scrn_init(0);
     // scrn_box(1, 1, 10, 10);
     // scrn_box(10, 10, 10, 10);
-    // scrn_clear(0xFF);
+    scrn_clear(0xFF);
     scrn_draw();
-
-    // game();
 
     err = receive_code(&uart);
     if (err < 0) return err;
