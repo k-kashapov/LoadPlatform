@@ -300,7 +300,7 @@ int main()
     if (err < 0) return err;
 #endif 
 
-    SPI_init(BAUD_DIV256);
+    SPI_init(BAUD_DIV2);
     scrn_init(0);
 
     scrn_clear(0x00);

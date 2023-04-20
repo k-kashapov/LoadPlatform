@@ -48,8 +48,8 @@ int umain(struct API* api) {
     const int step_dist = draw_dist / ray_steps;
 
     // Player movement
-    const int rot_spd = 12;
-    const int mov_spd = 80;
+    const int rot_spd = 4;
+    const int mov_spd = 16;
 
     // <----< Player position >----->
 
@@ -107,7 +107,7 @@ int umain(struct API* api) {
 
         api->scrn_draw();
 
-        for (int i = 0; i < 250000; i++)
+        for (int i = 0; i < 100; i++)
             ;
     }
 }
