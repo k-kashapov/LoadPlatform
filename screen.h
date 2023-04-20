@@ -31,6 +31,7 @@ int scrn_set_pxiel(unsigned x, unsigned y);
 int scrn_clr_pxiel(unsigned x, unsigned y);
 int scrn_inv_pxiel(unsigned x, unsigned y);
 int scrn_print    (unsigned x, unsigned y, int ch);
+int scrn_puts     (unsigned x, unsigned y, char *str, unsigned len);
 
 int scrn_xline(unsigned x, unsigned y, unsigned len);
 int scrn_yline(unsigned x, unsigned y, unsigned len);

@@ -249,3 +249,13 @@ int scrn_print(unsigned x, unsigned y, int ch) {
     return SCRN_OK;
 }
 
+int scrn_puts(unsigned x, unsigned y, char *str, unsigned len) {
+    for (unsigned ch = 0; ch < len; ch++) {
+        int res = scrn_print(x, y, str[ch]);
+        if (res < 0) return res;
+        x += 8;
+    }
+
+    return SCRN_OK;
+}
+

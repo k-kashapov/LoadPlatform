@@ -35,10 +35,10 @@ int umain(struct API* api) {
     const uint8_t MAP[8] = {
         0b11111111,
         0b10000001,
+        0b10010001,
+        0b10111001,
+        0b10010001,
         0b10000001,
-        0b10000001,
-        0b10001001,
-        0b10001001,
         0b10000001,
         0b11111111,
     };
@@ -46,6 +46,10 @@ int umain(struct API* api) {
     const int draw_dist = 5000;
     const int ray_steps = 20;
     const int step_dist = draw_dist / ray_steps;
+
+    // Player movement
+    const int rot_spd = 12;
+    const int mov_spd = 80;
 
     // <----< Player position >----->
 
@@ -71,7 +75,7 @@ int umain(struct API* api) {
                 if (check_x >= 8000 || check_y >= 8000) break;
 
                 if (MAP_VALUE(check_x, check_y)) {
-                    unsigned line_len = (unsigned)((ray_steps - step) * 2);
+                    unsigned line_len = (unsigned)(ray_steps - step) * 2;
                     api->scrn_yline(x + SCRN_WIDTH / 2, (SCRN_HEIGHT - line_len) / 2, line_len);
                     break;
                 }
@@ -84,19 +88,21 @@ int umain(struct API* api) {
         // }
 
         if (api->is_button_pressed(0)) {
-            view_angle -= 8;
+            view_angle -= rot_spd;
         }
 
         if (api->is_button_pressed(1)) {
-            view_angle += 8;
+            view_angle += rot_spd;
         }
 
         if (api->is_button_pressed(2)) {
-            plr_x -= 40;
+            plr_x -= cos_aprx(view_angle) * mov_spd / 1000;
+            plr_y -= sin_aprx(view_angle) * mov_spd / 1000;
         }
 
         if (api->is_button_pressed(3)) {
-            plr_x += 40;
+            plr_x += cos_aprx(view_angle) * mov_spd / 1000;
+            plr_y += sin_aprx(view_angle) * mov_spd / 1000;
         }
 
         api->scrn_draw();

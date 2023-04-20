@@ -302,9 +302,9 @@ int main()
 
     SPI_init(BAUD_DIV256);
     scrn_init(0);
-    // scrn_box(1, 1, 10, 10);
-    // scrn_box(10, 10, 10, 10);
-    scrn_clear(0xFF);
+
+    scrn_clear(0x00);
+    scrn_puts(SCRN_WIDTH / 2 - 40, SCRN_HEIGHT / 2 - 4, "Waiting...", 10);
     scrn_draw();
 
     err = receive_code(&uart);

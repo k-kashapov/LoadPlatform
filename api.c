@@ -35,7 +35,8 @@ const struct API API_host =
     .scrn_inv_pxl = scrn_inv_pxiel,
     .scrn_xline = scrn_xline,
     .scrn_yline = scrn_yline,
-    .scrn_box = scrn_box
+    .scrn_box = scrn_box,
+    .scrn_puts = scrn_puts,
 };
 
 __attribute__ ((section (".api"))) 
