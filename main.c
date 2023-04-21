@@ -310,6 +310,9 @@ int main()
     err = receive_code(&uart);
     if (err < 0) return err;
 
+    scrn_puts(SCRN_WIDTH / 2 - 40, SCRN_HEIGHT / 2 - 4, "Running...", 10);
+    scrn_draw();
+
     run_code();
 }
 

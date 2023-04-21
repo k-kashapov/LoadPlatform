@@ -21,7 +21,7 @@ int cos_aprx(int x_deg) {
     return cosTable[idx];
 }
 
-// void game(void) {
+#define BIT_INT(NUM) uint##NUM##_t
 
 int umain(struct API* api) {
 
@@ -32,7 +32,7 @@ int umain(struct API* api) {
 
     // <-----< Settings >----->
 
-    const uint8_t MAP[8] = {
+    const BIT_INT(8) MAP[8] = {
         0b11111111,
         0b10000001,
         0b10010001,
