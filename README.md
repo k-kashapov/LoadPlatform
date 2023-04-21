@@ -24,6 +24,8 @@ STgaMe32 is host hardware and peripherals, that allows you to run guest code wit
  - use 'make flash' to load host software to mc
  - use 'USRC=\<src> make ucode' to load guest code 
 
+![Example of working device](https://github.com/k-kashapov/LoadPlatform/blob/main/IMG.jpg)
+
 ---
 
 ### Project build peripherals
