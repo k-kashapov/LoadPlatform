@@ -44,12 +44,13 @@ extern struct API API_host;
 #define SRAM_VADDR 0x20000000U
 #define SRAM_PADDR 0x20000000U
 
-#define USER_OFFS  0x00000800U
+#define USER_OFFS  0x00000500U
 #define USER_START SRAM_VADDR + USER_OFFS
 #define USER_STACK SRAM_VADDR + SRAM_SIZE
 
 #define USER_EXEC_START USER_START + 1
-#define USER_MAX_PROG_SIZE SRAM_SIZE - USER_OFFS
+#define USER_MAX_STACK_SIZE 0x400
+#define USER_MAX_PROG_SIZE SRAM_SIZE - USER_OFFS - USER_MAX_STACK_SIZE
 
 //=========================================================
 

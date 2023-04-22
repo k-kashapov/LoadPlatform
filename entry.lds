@@ -22,6 +22,7 @@ SECTIONS
         KEEP(*(.vector_table));
         *(.text)
         *(.rodata)
+        *(.api_const)
     } > FLASH
 
     .data :
@@ -33,7 +34,6 @@ SECTIONS
 
         . = ALIGN(4);
 
-        *(.api_const)
         *(.api)
 
         . = ALIGN(4);

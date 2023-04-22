@@ -51,6 +51,7 @@
 #define OLED_SEGREMAP                       0xA0
 #define OLED_CHARGEPUMP                     0x8D
 
+__attribute__ ((section (".api"))) 
 static uint8_t FrameBuffer[SCRN_SIZ_BYTES] = {0};
 
 static struct ScrSettings {
