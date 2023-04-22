@@ -1,5 +1,5 @@
-# STgaMe32 
-This project is being developed as part of the course on microcontrollers at MIPT DREC 2 course 4 semester 2022-2023 in collaboration with Kamil Kashapov(github: [k-kashapov](https://github.com/k-kashapov)). The project was implemented WITHOUT the use of third-party libraries.
+# LoadPlatform 
+This project is being developed as part of the course on microcontrollers at MIPT DREC 2 course 4 semester 2022-2023. The project was implemented WITHOUT the use of third-party libraries.
 
 ---
 
